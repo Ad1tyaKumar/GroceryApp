@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import Header from '../../components/Header/Header';
 import { useSelector, useDispatch } from 'react-redux';
-import { getProduct, getProductDetails, getRelatedProducts } from '../../actions/productActions';
+import { clearErrors, getProduct, getProductDetails, getRelatedProducts, newReview } from '../../actions/productActions';
 import { Image } from 'expo-image';
 import Pagination from './Pagination'
 import Icon from '@expo/vector-icons/Ionicons';
@@ -15,6 +15,10 @@ import ReviewCard from './ReviewCard';
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import CardSkeleton from '../../components/Product/CardSkeleton';
 import ProductDetailsSkeleton from './ProductDetailsSkeleton';
+import { useSearch } from '../../components/SearchContext';
+import { addItemsToCart } from '../../actions/cartActions';
+import Toast from 'react-native-root-toast';
+import { NEW_REVIEW_RESET } from '../../constants/productConstants';
 
 const ProductDetails = () => {
 
@@ -24,7 +28,15 @@ const ProductDetails = () => {
     const scrollX = useRef(new Animated.Value(0)).current;
     const [index, setIndex] = useState(0)
     const dispatch = useDispatch();
-
+    const [prevPositionY, setPrevPositionY] = useState(0);
+    const [resetDrawer, setResetDrawer] = useState(false);
+    const { scrollY, setScrollY } = useSearch();
+    useFocusEffect(
+        React.useCallback(() => {
+            setResetDrawer(true);
+            setScrollY(false);
+        }, [])
+    )
 
     const isCarousel = useRef(null);
     const route = useRoute();
@@ -33,6 +45,9 @@ const ProductDetails = () => {
         (state) => state.productDetails
     );
     const { products, loading: loading1 } = useSelector((state) => state.relatedProducts)
+    const { success, error: reviewError } = useSelector(
+        (state) => state.newReview
+    );
     useEffect(() => {
         if (product && product.subCategory) {
             dispatch(getRelatedProducts(product.subCategory));
@@ -64,6 +79,17 @@ const ProductDetails = () => {
             dispatch(getProductDetails(id));
         }, [dispatch, id])
     )
+    useEffect(() => {
+        if (reviewError) {
+            Toast.show(reviewError, { duration: Toast.durations.SHORT });
+            dispatch(clearErrors());
+        }
+        if (success) {
+            Toast.show("Review Submitted Successfully!", { duration: Toast.durations.SHORT });
+            dispatch({ type: NEW_REVIEW_RESET });
+        }
+        dispatch(getProductDetails(id));
+    }, [dispatch, success, reviewError])
     const handleOnViewableItemsChanged = useRef(({ viewableItems }) => {
         setIndex(viewableItems[0].index)
     }).current;
@@ -76,6 +102,13 @@ const ProductDetails = () => {
         if (flatListRef.current) {
             flatListRef.current.scrollToIndex({ index: selectedIndex });
         }
+    };
+    const reviewSubmitHandler = () => {
+        const myForm = {
+            rating, comment, productId: id,
+        };
+        dispatch(newReview(myForm));
+        setModalVisible(false);
     };
     const Divider = () => {
         return (
@@ -96,8 +129,14 @@ const ProductDetails = () => {
                     height: Dimensions.get('window').height - 50
                 }}>
                 {
-                   ( loading || loading1) ? <ProductDetailsSkeleton /> :
+                    (loading || loading1) ? <ProductDetailsSkeleton /> :
                         <ScrollView
+                            onScroll={(event) => {
+                                const { contentOffset } = event.nativeEvent;
+                                setScrollY(prevPositionY <= contentOffset.y);
+                                setPrevPositionY(contentOffset.y);
+                                setResetDrawer(false);
+                            }}
                             contentContainerStyle={{ alignItems: 'center' }}
                             style={{
                                 height: Dimensions.get('screen').height / 1.3,
@@ -247,6 +286,10 @@ const ProductDetails = () => {
                                         <Icon1 name='plus' color={'black'} size={20} />
                                     </TouchableOpacity>
                                     <TouchableOpacity
+                                        onPress={() => {
+                                            dispatch(addItemsToCart(id, quantity))
+                                            Toast.show("Added to Cart", { duration: Toast.durations.SHORT })
+                                        }}
                                         style={styles.addToCartButton}
                                         activeOpacity={0.7}
                                     >
@@ -405,7 +448,7 @@ const ProductDetails = () => {
                             <FlatList
                                 horizontal={true}
                                 style={{
-                                    marginBottom:50,
+                                    marginBottom: 50,
                                 }}
                                 showsHorizontalScrollIndicator={false}
                                 data={product.reviews}
@@ -509,6 +552,7 @@ const ProductDetails = () => {
                                             </TouchableOpacity>
                                             <TouchableOpacity
                                                 activeOpacity={0.6}
+                                                onPress={reviewSubmitHandler}
                                                 disabled={comment.length > 250}
                                                 style={[styles.modalActionsButtons, { opacity: (comment.length > 250 || !rating) ? 0.6 : 1 }]}>
                                                 <Text
@@ -526,7 +570,7 @@ const ProductDetails = () => {
                         </ScrollView>
                 }
             </View>
-            <BottomNavigator />
+            <BottomNavigator resetDrawer={resetDrawer} />
         </>
     )
 }

@@ -38,9 +38,7 @@ export class Main extends Component {
                         }}
                         drawerContent={props => <DrawerContent {...props} />}
                     >
-                        <Drawer.Screen name='order-success' component={Success} options={{
-                            header: () => <Header />
-                        }} />
+
                         <Drawer.Screen name='home' component={Home} options={{
                             header: () => <Header />
                         }} />
@@ -77,7 +75,9 @@ export class Main extends Component {
                         <Drawer.Screen name='order' component={CartCheckout} options={{
                             header: () => <Header />
                         }} />
-
+                        <Drawer.Screen name='order-success' component={Success} options={{
+                            header: () => <Header />
+                        }} />
                     </Drawer.Navigator>
                 </NavigationContainer>
             </SearchProvider>

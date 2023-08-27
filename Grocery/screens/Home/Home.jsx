@@ -3,7 +3,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Header from '../../components/Header/Header';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
 import { Image } from 'expo-image';
-import { Dimensions, Text, View, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { Dimensions, Text, View, ScrollView, TouchableOpacity, Pressable, Animated } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux'
 import { clearErrors, getProduct } from '../../actions/productActions'
 import Icon from '@expo/vector-icons/MaterialIcons';
@@ -12,6 +12,7 @@ import Footer from '../../components/Footer/Footer';
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import { useRoute } from '@react-navigation/native';
 import CardSkeleton from '../../components/Product/CardSkeleton';
+import { useSearch } from '../../components/SearchContext';
 const brandImg = new Map();
 brandImg.set(
     "https://res.cloudinary.com/dmz2azdkb/image/upload/f_auto,q_auto/v1/brands/ithwagjjdcqxckmtw46t",
@@ -42,13 +43,22 @@ const categoryImg = [
 const Home = () => {
 
     const route = useRoute();
+    const { scrollY, setScrollY } = useSearch();
 
     //Redux things
     const dispatch = useDispatch();
     const { loading, products, error } = useSelector((state) => state.products);
     const navigation = useNavigation();
+    const [resetDrawer,setResetDrawer]=useState(false);
+    useFocusEffect(
+        React.useCallback(()=>{
+            setResetDrawer(true);
+            setScrollY(false);
+        },[])
+    )
     useFocusEffect(
         React.useCallback(() => {
+            console.log(scrollY);
             console.log('h');
             dispatch(getProduct());
         }, [dispatch])
@@ -62,7 +72,6 @@ const Home = () => {
         const { contentOffset } = event.nativeEvent;
         setCurrentScrollX(contentOffset.x);
     };
-
     const scrollToPosition = (xPosition) => {
         if (scrollRef.current) {
             scrollRef.current.scrollTo({ x: xPosition, animated: true });
@@ -76,7 +85,6 @@ const Home = () => {
         }
     };
     const [prevPositionY, setPrevPositionY] = useState(0);
-    const [scrollY, setScrollY] = useState(false);
 
     return (
         <>
@@ -97,6 +105,7 @@ const Home = () => {
                     onScroll={(event) => {
                         const { contentOffset } = event.nativeEvent;
                         setScrollY(prevPositionY <= contentOffset.y);
+                        setResetDrawer(false);
                         setPrevPositionY(contentOffset.y);
                     }}
                 >
@@ -247,7 +256,7 @@ const Home = () => {
                     </View>
                 </ScrollView>
             </View>
-            <BottomNavigator />
+            <BottomNavigator resetDrawer={resetDrawer} />
         </>
     )
 }

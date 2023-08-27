@@ -4,9 +4,10 @@ const SearchContext = createContext();
 
 export const SearchProvider = ({ children }) => {
   const [searchInput, setSearchInput] = useState('');
+  const [scrollY, setScrollY] = useState(true);
 
   return (
-    <SearchContext.Provider value={{ searchInput, setSearchInput }}>
+    <SearchContext.Provider value={{ searchInput, setSearchInput,scrollY,setScrollY }}>
       {children}
     </SearchContext.Provider>
   );

@@ -1,28 +1,35 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
-import React from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native'
+import React, { useEffect, useRef } from 'react'
 
 import Icon from '@expo/vector-icons/AntDesign';
 import Icon1 from '@expo/vector-icons/Feather';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
+import { useSearch } from '../SearchContext';
 
-const BottomNavigator = () => {
+const BottomNavigator = ({resetDrawer}) => {
     const route = useRoute();
+    const { scrollY } = useSearch();
+
     const navigation = useNavigation();
     const { user, isAuthenticated } = useSelector((state) => state.user);
     // console.log(Dimensions.get('screen').height);
+    const animation = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.spring(animation, {
+            toValue: scrollY ? 0 : 1,
+            useNativeDriver: true
+        }).start();
+    }, [scrollY])
+
     return (
-        <View
-            style={{
-                backgroundColor: 'lightgrey',
-                width: '100%',
-                height: 50,
-                flexDirection: 'row',
-                justifyContent: 'space-around',
-                position: 'absolute',
-                bottom: 0,
-                // top:Dimensions.get('screen').height-98
-            }}>
+        <Animated.View
+            style={[styles.bottomNavigator,{transform:[{
+                translateY: resetDrawer?0:animation.interpolate({
+                    inputRange:[0,1],
+                    outputRange:[0,50],
+                })
+            }]}]}>
             <TouchableOpacity
                 onPress={() => navigation.navigate('home')}
                 style={styles.navigationButtons}>
@@ -59,7 +66,7 @@ const BottomNavigator = () => {
                     Orders
                 </Text>
             </TouchableOpacity>
-        </View >
+        </Animated.View >
     )
 }
 
@@ -70,5 +77,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: 50,
-    }
+    },
+    bottomNavigator: {
+        backgroundColor: 'lightgrey',
+        width: '100%',
+        height: 50,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        position: 'absolute',
+        bottom: 0,
+    },
 })

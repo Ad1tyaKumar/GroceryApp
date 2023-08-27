@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { createOrder } from '../../actions/orderActions';
 import Toast from 'react-native-root-toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 
 
@@ -13,6 +14,7 @@ const Payment = () => {
     const dispatch = useDispatch();
     const { shippingInfo, cartItems } = useSelector((state) => state.cart);
     const [filterMethodNo, setFilterMethodNo] = useState(0);
+    const navigation = useNavigation();
 
 
     const cashOnDelivery = async () => {
@@ -33,6 +35,7 @@ const Payment = () => {
             console.log(data);
             dispatch(createOrder(data));
             Toast.show('ORDER PLACED!', { duration: Toast.durations.LONG });
+            navigation.navigate('order-success');
         } catch (error) {
             Toast.show('Some Error Occurred!', { duration: Toast.durations.LONG });
 
@@ -241,7 +244,7 @@ const Payment = () => {
                                     <Text
                                         style={{
                                             color: 'white',
-                                            fontSize:15,
+                                            fontSize: 15,
                                         }}>
                                         Pay {`₹${cartItems.reduce(
                                             (acc, item) => acc + item.quantity * item.price,

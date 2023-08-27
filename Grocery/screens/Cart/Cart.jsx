@@ -6,11 +6,15 @@ import Toast from 'react-native-root-toast';
 import Icon from '@expo/vector-icons/AntDesign'
 import { Image } from 'expo-image';
 import BottomNavigator from '../../components/Bottom/BottomNavigator'
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useSearch } from '../../components/SearchContext';
 
 const Cart = () => {
-    const navigation=useNavigation();
+    const navigation = useNavigation();
     const dispatch = useDispatch();
+    const { scrollY, setScrollY } = useSearch();
+    const [prevPositionY, setPrevPositionY] = useState(0);
+
     const { isAuthenticated } = useSelector((state) => state.user);
     const { cartItems, loading } = useSelector((state) => state.cart);
     useEffect(() => {
@@ -27,6 +31,13 @@ const Cart = () => {
             dispatch(addItemsToCart(id, q - 1));
         }
     };
+    const [resetDrawer, setResetDrawer] = useState(false);
+    useFocusEffect(
+        React.useCallback(() => {
+            setResetDrawer(true);
+            setScrollY(false);
+        }, [])
+    )
     const increaseQuantity = (id, q, stock) => {
         if (stock <= q) {
             Toast.show('Cannot Add more Items!', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
@@ -42,6 +53,12 @@ const Cart = () => {
     return (
         <>
             <ScrollView
+                onScroll={(event) => {
+                    const { contentOffset } = event.nativeEvent;
+                    setScrollY(prevPositionY <= contentOffset.y);
+                    setPrevPositionY(contentOffset.y);
+                    setResetDrawer(false);
+                }}
                 style={{
                     width: '100%',
                     height: Dimensions.get('window').height
@@ -255,7 +272,7 @@ const Cart = () => {
             <View
                 style={{
                     position: 'absolute',
-                    bottom: 50,
+                    bottom: resetDrawer?50:!scrollY?0:50,
                     height: 50,
                     backgroundColor: 'grey',
                     width: '100%',
@@ -274,13 +291,13 @@ const Cart = () => {
                     )}`}
                 </Text>
                 <TouchableOpacity
-                onPress={()=>navigation.navigate('order')}
-                activeOpacity={0.6}
+                    onPress={() => navigation.navigate('order')}
+                    activeOpacity={0.6}
                     style={{
                         height: 35,
                         width: 100,
-                        borderRadius:15,
-                        elevation:4,
+                        borderRadius: 15,
+                        elevation: 4,
 
                         backgroundColor: '#26a541',
                         justifyContent: 'center',
@@ -289,13 +306,13 @@ const Cart = () => {
                     <Text
                         style={{
                             color: 'white',
-                            fontWeight:'500'
+                            fontWeight: '500'
                         }}>
                         Place Order
                     </Text>
                 </TouchableOpacity>
             </View>
-            <BottomNavigator />
+            <BottomNavigator  resetDrawer={resetDrawer}/>
         </>
     )
 }
@@ -304,7 +321,7 @@ export default Cart
 
 const styles = StyleSheet.create({
     cartDiv: {
-        marginTop: 10,
+        marginTop: 20,
         alignItems: 'center',
     },
     quantityButton: {

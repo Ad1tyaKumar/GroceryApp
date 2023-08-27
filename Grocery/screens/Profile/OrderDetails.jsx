@@ -1,15 +1,27 @@
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Pressable } from 'react-native'
 import React from 'react'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import { useSelector } from 'react-redux';
 import { Image } from 'expo-image';
+import { useSearch } from '../../components/SearchContext';
+import { useState } from 'react';
 
 const OrderDetails = () => {
 
     const route = useRoute();
 
     const { user, isAuthenticated, loading, error } = useSelector((state) => state.user);
+    const { scrollY, setScrollY } = useSearch();
+    useFocusEffect(
+        React.useCallback(()=>{
+            setResetDrawer(true);
+            setScrollY(false);
+        },[])
+    )
+    const [resetDrawer,setResetDrawer]=useState(false);
+
+    const [prevPositionY, setPrevPositionY] = useState(0);
 
     const order = route.params.order;
     const address = `${order.shippingInfo.address}, ${order.shippingInfo.city
@@ -20,7 +32,13 @@ const OrderDetails = () => {
         <>
             {
                 loading ? <ActivityIndicator size={50} /> :
-                    <ScrollView>
+                    <ScrollView
+                    onScroll={(event) => {
+                    const { contentOffset } = event.nativeEvent;
+                    setScrollY(prevPositionY <= contentOffset.y);
+                    setPrevPositionY(contentOffset.y);
+                    setResetDrawer(false);
+                }}>
                         <View
                             style={{
                                 margin: 10,
@@ -198,7 +216,7 @@ const OrderDetails = () => {
                         </View>
                     </ScrollView>
             }
-            <BottomNavigator />
+            <BottomNavigator  resetDrawer={resetDrawer} />
         </>
     )
 }

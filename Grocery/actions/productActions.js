@@ -34,6 +34,7 @@ import {
   GET_PRODUCT_REQUEST,
   GET_PRODUCT_SUCCESS,
 } from "../constants/productConstants.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 console.log(backEndUrl);
 export const getProduct =
   (
@@ -135,7 +136,7 @@ export const getProductsByBrands =
           modifiedString = keyword;
         }
         let link = `${backEndUrl}/api/v1/products?keyword=${modifiedString}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&ratings[gte]=${ratings}`;
-        
+
         if (category) {
           link += `&category=${category}`;
         }
@@ -240,22 +241,17 @@ export const getProductDetails = (id) => async (dispatch) => {
 export const newReview = (reviewData) => async (dispatch) => {
   try {
     dispatch({ type: NEW_REVIEW_REQUEST });
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
+    const token = await AsyncStorage.getItem('token');
     const { data } = await axios.put(
       `${backEndUrl}/api/v1/review`,
-      reviewData,
-      config
+      { reviewData, token },
     );
     dispatch({
       type: NEW_REVIEW_SUCCESS,
       payload: data.success,
     });
   } catch (error) {
+    console.log(error);
     dispatch({
       type: NEW_REVIEW_FAIL,
       payload: error.response.data.msg,

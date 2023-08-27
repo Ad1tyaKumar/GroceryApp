@@ -9,6 +9,7 @@ import Icon from '@expo/vector-icons/AntDesign'
 import ProductCard from '../../components/Product/ProductCard';
 import FilterBoxModal from './FilterBoxModal';
 import CardSkeleton from '../../components/Product/CardSkeleton';
+import { useSearch } from '../../components/SearchContext';
 
 const Products = () => {
 
@@ -20,7 +21,15 @@ const Products = () => {
     const route = useRoute();
 
     const keyword = route.params.keyword;
+    const [resetDrawer, setResetDrawer] = useState(false);
     const { products, loading, error, getBrands } = useSelector((state) => state.products)
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setResetDrawer(true);
+            setScrollY(false);
+        }, [])
+    )
 
     useEffect(() => {
         console.log(keyword);
@@ -49,6 +58,8 @@ const Products = () => {
         getProductsByPrice([], [0, 20000], 0);
         setTriggered(false);
     }
+    const [prevPositionY, setPrevPositionY] = useState(0);
+    const { scrollY, setScrollY } = useSearch();
 
 
     return (
@@ -61,6 +72,12 @@ const Products = () => {
                 }}>
 
                 <ScrollView
+                    onScroll={(event) => {
+                        const { contentOffset } = event.nativeEvent;
+                        setScrollY(prevPositionY <= contentOffset.y);
+                        setResetDrawer(false);
+                        setPrevPositionY(contentOffset.y);
+                    }}
                     contentContainerStyle={{
                         alignItems: 'flex-end'
                     }}>
@@ -124,7 +141,7 @@ const Products = () => {
                         style={{
                             width: '100%',
                             alignItems: 'center',
-                            marginBottom:50,
+                            marginBottom: 50,
                         }}>
 
                         <View
@@ -175,7 +192,7 @@ const Products = () => {
                 setFilterCount={setFilterCount}
                 clearFilter={clearFilter}
             />
-            <BottomNavigator />
+            <BottomNavigator resetDrawer={resetDrawer} />
         </>
     )
 }

@@ -100,12 +100,12 @@ const ProductCard = ({ product }) => {
                             onPress={() => {
                                 if (isAuthenticated) {
                                     if (product.Stock < 1) {
-                                        Toast.show('OTP Sent Successfully!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
+                                        Toast.show('Cannot Add more Items!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
                                         return;
                                     }
                                     dispatch(addItemsToCart(product._id, 1, product.Stock));
                                 } else {
-                                    Toast.show('OTP Sent Successfully!', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
+                                    Toast.show('Login First!', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
                                 }
                             }}
                             activeOpacity={0.6}

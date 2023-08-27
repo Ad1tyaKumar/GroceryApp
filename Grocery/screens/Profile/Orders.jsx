@@ -8,6 +8,8 @@ import { Image } from 'expo-image'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { getItems } from '../../actions/cartActions'
+import { useSearch } from '../../components/SearchContext'
+import { useState } from 'react'
 
 
 const Orders = () => {
@@ -33,13 +35,28 @@ const Orders = () => {
             dispatch(saveOrder());
         }, [dispatch])
     )
+    const { scrollY, setScrollY } = useSearch();
+    useFocusEffect(
+        React.useCallback(() => {
+            setResetDrawer(true);
+            setScrollY(false);
+        }, [])
+    )
+    const [resetDrawer, setResetDrawer] = useState(false);
 
+    const [prevPositionY, setPrevPositionY] = useState(0);
 
     return (
         <>
             {
                 (loading || ordersLoading) ? <ActivityIndicator size={50} /> :
                     <ScrollView
+                        onScroll={(event) => {
+                            const { contentOffset } = event.nativeEvent;
+                            setScrollY(prevPositionY <= contentOffset.y);
+                            setPrevPositionY(contentOffset.y);
+                            setResetDrawer(false);
+                        }}
                         showsVerticalScrollIndicator={false}
                         style={{
                             margin: 10,
@@ -139,7 +156,7 @@ const Orders = () => {
                         </View>
                     </ScrollView >
             }
-            <BottomNavigator />
+            <BottomNavigator  resetDrawer={resetDrawer}/>
         </>
     )
 }

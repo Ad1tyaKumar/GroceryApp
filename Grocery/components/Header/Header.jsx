@@ -1,4 +1,4 @@
-import { View, Button, Text, SafeAreaView, TouchableOpacity, Platform, StatusBar, StyleSheet, TextInput, ActivityIndicator, Modal, Pressable, TouchableWithoutFeedback } from 'react-native'
+import { View, Button, Text, SafeAreaView, TouchableOpacity, Platform, StatusBar, StyleSheet, TextInput, ActivityIndicator, Modal, Pressable, TouchableWithoutFeedback, Animated } from 'react-native'
 import React, { useDebugValue, useEffect, useState } from 'react'
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/core';
@@ -9,9 +9,10 @@ import { addPinCode, getPin, getUser } from '../../actions/userActions';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getItems } from '../../actions/cartActions';
 import Icon1 from '@expo/vector-icons/Feather'
+import { useRef } from 'react';
 
 const Header = () => {
-    const { searchInput, setSearchInput } = useSearch();
+    const { searchInput, setSearchInput, scrollY } = useSearch();
 
     // const [keyword, setKeyword] = useState(searchInput);
     const dispatch = useDispatch();
@@ -59,8 +60,23 @@ const Header = () => {
             setPinCode(pinCode);
         }, [pinCode])
     )
+    const animation = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.spring(animation, {
+            toValue: scrollY ? 1 : 0,
+            useNativeDriver: true
+        }).start();
+    }, [scrollY])
+    const interpolatedHeight = animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 0], // Define the height values here
+      });
+    
     return (
-        <View>
+        <View style={{
+            height:!scrollY?'auto':79,
+            backgroundColor:'lightgreen'
+        }}>
             <SafeAreaView>
                 <View style={styles.nav} >
                     <Icon name="menu" size={30} color="black" onPress={() => navigation.toggleDrawer()} />
@@ -114,12 +130,14 @@ const Header = () => {
                         }
                     </TouchableOpacity>
                 </View>
-                <View
+                <Animated.View
                     style={{
                         flexDirection: 'row',
                         justifyContent: 'center',
-                        height: 40,
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        height:40,
+                        width:'100%',
+                        transform: [{ scaleY: interpolatedHeight }]
                     }}>
                     <TextInput
                         onChangeText={setSearchInput}
@@ -127,7 +145,6 @@ const Header = () => {
                         onSubmitEditing={handleSearch}
                         placeholder='Search'
                         cursorColor={'black'} style={{
-                            borderWidth: 1,
                             height: 30,
                             fontSize: 15,
                             width: 250,
@@ -135,7 +152,9 @@ const Header = () => {
                             borderBottomLeftRadius: 5,
                             borderRightWidth: 0,
                             paddingLeft: 5,
-                            borderColor: 'grey'
+                            borderColor: 'grey',
+                            backgroundColor:'white',
+                            elevation:15,
                         }} />
                     <TouchableOpacity
                         onPress={handleSearch}
@@ -156,7 +175,7 @@ const Header = () => {
                         <Icon name='search' color={'white'} size={25} />
 
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
                 <Modal
                     animationType='fade'
                     transparent={true}
@@ -185,11 +204,11 @@ const Header = () => {
                                 alignItems: 'center',
                             }}>
                             <TouchableOpacity
-                            onPress={()=>setModalVisible(false)}
+                                onPress={() => setModalVisible(false)}
                                 style={{
                                     position: 'absolute',
-                                    top:10,
-                                    right:10
+                                    top: 10,
+                                    right: 10
                                 }}>
                                 <Icon size={20} name='close' />
                             </TouchableOpacity>
