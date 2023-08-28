@@ -9,7 +9,6 @@ import Pagination from './Pagination'
 import Icon from '@expo/vector-icons/Ionicons';
 import Stars from 'react-native-stars';
 import Icon1 from '@expo/vector-icons/AntDesign';
-import Footer from '../../components/Footer/Footer';
 import ProductCard from '../../components/Product/ProductCard';
 import ReviewCard from './ReviewCard';
 import BottomNavigator from '../../components/Bottom/BottomNavigator';

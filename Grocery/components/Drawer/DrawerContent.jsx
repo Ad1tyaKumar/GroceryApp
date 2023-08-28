@@ -115,6 +115,7 @@ const DrawerContent = ({ navigation }) => {
         });
     };
 
+
     return (
         <ScrollView style={styles.drawerDiv}>
 
@@ -250,17 +251,17 @@ const DrawerContent = ({ navigation }) => {
                             Home
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={()=>navigation.navigate('profile')}>
                         <Text style={styles.myAccountAction}>
                             Profile
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity  onPress={()=>navigation.navigate('orders')}>
                         <Text style={styles.myAccountAction}>
                             Orders
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    <TouchableOpacity  onPress={()=>navigation.navigate('cart')}>
                         <Text style={styles.myAccountAction}>
                             Cart
                         </Text>

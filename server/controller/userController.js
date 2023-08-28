@@ -107,11 +107,11 @@ export const updateUserInfo = catchAsyncErrors(async (req, res, next) => {
     next(new ErrorHandler(`Login First`, 400));
   }
   const newUserData = {
-    name: req.body.name,
-    phoneNo: req.body.phoneNo,
+    name: req.body.userData.name,
+    phoneNo: req.body.userData.phoneNo,
   };
   if (req.body.email !== "") {
-    newUserData.email = req.body.email;
+    newUserData.email = req.body.userData.email;
   }
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
   await User.findByIdAndUpdate(decoded.id, newUserData, {
@@ -121,67 +121,6 @@ export const updateUserInfo = catchAsyncErrors(async (req, res, next) => {
   });
   res.status(200).json({
     success: true,
-  });
-});
-
-//ADMIN
-
-//getAll users
-export const getAllUsers = catchAsyncErrors(async (req, res, next) => {
-  const users = await User.find();
-  // console.log(users);
-  res.status(200).json({
-    success: true,
-    users,
-  });
-});
-
-//get One user
-export const getOneUser = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params;
-  const user = await User.findById(id);
-  if (!user) {
-    next(new ErrorHandler(`User not found!`, 404));
-  }
-  res.status(200).json({
-    success: true,
-    user,
-  });
-});
-
-//Update user
-
-export const updateUser = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params;
-
-  const user = await User.findByIdAndUpdate(
-    id,
-    { role: req.body.role },
-    {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    }
-  );
-  if (!user) {
-    next(new ErrorHandler(`User Not Found`, 404));
-  }
-  res.status(200).json({
-    success: true,
-  });
-});
-
-//delete User
-export const deleteUser = catchAsyncErrors(async (req, res, next) => {
-  const { id } = req.params;
-  const user = await User.findByIdAndDelete(id);
-  if (!user) {
-    next(new ErrorHandler(`User not found`, 404));
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "User Deleted Successfully",
   });
 });
 

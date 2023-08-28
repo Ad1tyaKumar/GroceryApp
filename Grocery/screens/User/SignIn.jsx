@@ -8,7 +8,6 @@ import Login from './Login/Login';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkUser, login, register } from '../../actions/userActions';
-import { RecaptchaVerifier, signInWithPhoneNumber } from "@firebase/auth";
 import { PhoneAuthProvider } from "firebase/auth";
 import { auth } from "../../firebase.config";
 const SignIn = () => {

@@ -67,212 +67,227 @@ const Cart = () => {
 
 
                     loading ? <Text>LOADING...</Text> :
-                        <View style={styles.cartDiv}>
-                            <Text
-                                style={{
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 10,
-                                }}>My Cart ({cartItems.length} Items)</Text>
-                            <View
-                                style={{
-                                    borderBottomWidth: 0.8,
-                                    width: '100%',
 
-                                }}
-                            />
-                            <View
-                                style={styles.cartItems}>
-                                {
-                                    cartItems &&
+                    cartItems && cartItems.length ?
+                            <View style={styles.cartDiv}>
+                                <Text
+                                    style={{
+                                        fontSize: 20,
+                                        fontWeight: '500',
+                                        marginBottom: 10,
+                                    }}>My Cart ({cartItems.length} Items)</Text>
+                                <View
+                                    style={{
+                                        borderBottomWidth: 0.8,
+                                        width: '100%',
 
-                                    cartItems.map((item, index) => (
-                                        <View
-                                            style={{
-                                                backgroundColor: 'white',
-                                                margin: 5,
-                                                marginTop: 10,
-                                                marginBottom: 10,
+                                    }}
+                                />
+                                <View
+                                    style={styles.cartItems}>
+                                    {
+                                        cartItems &&
 
-                                            }}
-                                            key={index}
-                                        >
+                                        cartItems.map((item, index) => (
                                             <View
                                                 style={{
-                                                    flexDirection: 'row',
+                                                    backgroundColor: 'white',
+                                                    margin: 5,
                                                     marginTop: 10,
                                                     marginBottom: 10,
 
-                                                    // backgroundColor: 'white'
-                                                }}>
-
-                                                <Image
-                                                    style={{
-                                                        height: 100,
-                                                        width: 100,
-                                                        marginRight: 12,
-                                                    }} source={`https://res.cloudinary.com/dmz2azdkb/image/upload/f_auto,q_auto/v1/products/${item.image.slice(item.image.indexOf("products/") + "products/".length, item.image.indexOf(".avif"))}`} />
-
+                                                }}
+                                                key={index}
+                                            >
                                                 <View
                                                     style={{
-                                                        width: '70%',
-                                                        position: 'relative'
+                                                        flexDirection: 'row',
+                                                        marginTop: 10,
+                                                        marginBottom: 10,
+
+                                                        // backgroundColor: 'white'
                                                     }}>
-                                                    <Text style={{
 
-                                                        marginBottom: 10
-                                                    }} key={index}>
-                                                        {item.name}
-                                                    </Text>
-                                                    <Text
+                                                    <Image
                                                         style={{
-                                                            color: item.Stock < 1
-                                                                ? "red"
-                                                                : "green",
-                                                            fontWeight: '500',
-                                                            marginBottom: 10
-                                                        }}>
-                                                        <Text
-                                                            style={{
-                                                                color: 'black',
+                                                            height: 100,
+                                                            width: 100,
+                                                            marginRight: 12,
+                                                        }} source={`https://res.cloudinary.com/dmz2azdkb/image/upload/f_auto,q_auto/v1/products/${item.image.slice(item.image.indexOf("products/") + "products/".length, item.image.indexOf(".avif"))}`} />
 
-                                                            }}>
-                                                            Status:
-                                                        </Text>
-                                                        {
-                                                            item.Stock < 1 ? " OutOfStock"
-                                                                : " InStock"
-                                                        }
-                                                    </Text>
                                                     <View
                                                         style={{
-                                                            flexDirection: 'row',
-                                                            justifyContent: 'space-between',
-                                                            width: '87%',
-                                                            position: 'absolute',
-                                                            bottom: 0
+                                                            width: '70%',
+                                                            position: 'relative'
                                                         }}>
+                                                        <Text style={{
+
+                                                            marginBottom: 10
+                                                        }} key={index}>
+                                                            {item.name}
+                                                        </Text>
                                                         <Text
                                                             style={{
-                                                                fontWeight: '500'
+                                                                color: item.Stock < 1
+                                                                    ? "red"
+                                                                    : "green",
+                                                                fontWeight: '500',
+                                                                marginBottom: 10
                                                             }}>
-                                                            ₹{item.price}
+                                                            <Text
+                                                                style={{
+                                                                    color: 'black',
+
+                                                                }}>
+                                                                Status:
+                                                            </Text>
+                                                            {
+                                                                item.Stock < 1 ? " OutOfStock"
+                                                                    : " InStock"
+                                                            }
                                                         </Text>
                                                         <View
                                                             style={{
                                                                 flexDirection: 'row',
-                                                                width: 70,
-                                                                justifyContent: "space-between"
+                                                                justifyContent: 'space-between',
+                                                                width: '87%',
+                                                                position: 'absolute',
+                                                                bottom: 0
                                                             }}>
-                                                            <TouchableOpacity
-                                                                onPress={() =>
-                                                                    decreaseQuantity(item.product, item.quantity)
-                                                                }
-                                                                style={styles.quantityButton}>
-                                                                <Icon name='minus' size={18} color={'black'} />
-                                                            </TouchableOpacity>
-                                                            <Text>
-                                                                {item.quantity}
+                                                            <Text
+                                                                style={{
+                                                                    fontWeight: '500'
+                                                                }}>
+                                                                ₹{item.price}
                                                             </Text>
-                                                            <TouchableOpacity
-                                                                onPress={() =>
-                                                                    increaseQuantity(
-                                                                        item.product,
-                                                                        item.quantity,
-                                                                        item.stock
-                                                                    )
-                                                                }
-                                                                style={styles.quantityButton}>
-                                                                <Icon name='plus' size={18} color={'black'} />
-                                                            </TouchableOpacity>
+                                                            <View
+                                                                style={{
+                                                                    flexDirection: 'row',
+                                                                    width: 70,
+                                                                    justifyContent: "space-between"
+                                                                }}>
+                                                                <TouchableOpacity
+                                                                    onPress={() =>
+                                                                        decreaseQuantity(item.product, item.quantity)
+                                                                    }
+                                                                    style={styles.quantityButton}>
+                                                                    <Icon name='minus' size={18} color={'black'} />
+                                                                </TouchableOpacity>
+                                                                <Text>
+                                                                    {item.quantity}
+                                                                </Text>
+                                                                <TouchableOpacity
+                                                                    onPress={() =>
+                                                                        increaseQuantity(
+                                                                            item.product,
+                                                                            item.quantity,
+                                                                            item.stock
+                                                                        )
+                                                                    }
+                                                                    style={styles.quantityButton}>
+                                                                    <Icon name='plus' size={18} color={'black'} />
+                                                                </TouchableOpacity>
+                                                            </View>
                                                         </View>
                                                     </View>
                                                 </View>
+                                                <View
+                                                    style={{
+                                                        borderBottomWidth: 1,
+                                                        width: '100%',
+                                                        borderColor: 'lightgrey'
+
+                                                    }}
+
+                                                />
                                             </View>
-                                            <View
-                                                style={{
-                                                    borderBottomWidth: 1,
-                                                    width: '100%',
-                                                    borderColor: 'lightgrey'
-
-                                                }}
-
-                                            />
-                                        </View>
-                                    ))
-                                }
-                            </View>
-                            <View
-                                style={styles.paymentDetails}
-                            >
-                                <Text
-                                    style={{
-                                        fontWeight: '500',
-                                        fontSize: 25,
-                                        margin: 20,
-                                        marginBottom: 30,
-                                    }}>
-                                    Payment Details
-                                </Text>
-                                <View
-                                    style={styles.paymentPrice}>
-                                    <Text>
-                                        MRP Total
-                                    </Text>
-                                    <Text>
-                                        {`₹${cartItems.reduce(
-                                            (total, curr) => total + curr.price * curr.quantity,
-                                            0
-                                        )}`}
-                                    </Text>
+                                        ))
+                                    }
                                 </View>
-                                <View style={{
-                                    borderBottomWidth: 1,
-                                    borderColor: 'lightgrey',
-                                    width: '100%',
-                                    marginTop: 10,
-                                    marginBottom: 10,
-                                }} />
                                 <View
-                                    style={styles.paymentPrice}>
-                                    <Text>
-                                        Delivery Fee
-                                    </Text>
+                                    style={styles.paymentDetails}
+                                >
                                     <Text
                                         style={{
-                                            fontWeight: '600'
+                                            fontWeight: '500',
+                                            fontSize: 25,
+                                            margin: 20,
+                                            marginBottom: 30,
                                         }}>
-                                        {`Free`}
+                                        Payment Details
                                     </Text>
+                                    <View
+                                        style={styles.paymentPrice}>
+                                        <Text>
+                                            MRP Total
+                                        </Text>
+                                        <Text>
+                                            {`₹${cartItems.reduce(
+                                                (total, curr) => total + curr.price * curr.quantity,
+                                                0
+                                            )}`}
+                                        </Text>
+                                    </View>
+                                    <View style={{
+                                        borderBottomWidth: 1,
+                                        borderColor: 'lightgrey',
+                                        width: '100%',
+                                        marginTop: 10,
+                                        marginBottom: 10,
+                                    }} />
+                                    <View
+                                        style={styles.paymentPrice}>
+                                        <Text>
+                                            Delivery Fee
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                fontWeight: '600'
+                                            }}>
+                                            {`Free`}
+                                        </Text>
+                                    </View>
+                                    <View style={{
+                                        borderBottomWidth: 1,
+                                        borderColor: 'lightgrey',
+                                        width: '100%',
+                                        marginTop: 10,
+                                        marginBottom: 10,
+                                    }} />
+                                    <View
+                                        style={styles.paymentPrice}>
+                                        <Text>
+                                            Total
+                                        </Text>
+                                        <Text>
+                                            {`₹${cartItems.reduce(
+                                                (total, curr) => total + curr.price * curr.quantity,
+                                                0
+                                            )}`}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={{
-                                    borderBottomWidth: 1,
-                                    borderColor: 'lightgrey',
-                                    width: '100%',
-                                    marginTop: 10,
-                                    marginBottom: 10,
-                                }} />
-                                <View
-                                    style={styles.paymentPrice}>
-                                    <Text>
-                                        Total
-                                    </Text>
-                                    <Text>
-                                        {`₹${cartItems.reduce(
-                                            (total, curr) => total + curr.price * curr.quantity,
-                                            0
-                                        )}`}
-                                    </Text>
-                                </View>
-                            </View>
 
-                        </View>
+                            </View> :
+                            <View style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: 500,
+                            }}>
+                                <Text style={{
+                                    fontSize:20,
+                                }}>
+                                    NOTHING IN YOU CART :()
+                                </Text>
+                            </View>
                 }
             </ScrollView>
+            {
+                cartItems && cartItems.length?
             <View
                 style={{
                     position: 'absolute',
-                    bottom: resetDrawer?50:!scrollY?0:50,
+                    bottom: resetDrawer ? 50 : !scrollY ? 0 : 50,
                     height: 50,
                     backgroundColor: 'grey',
                     width: '100%',
@@ -311,8 +326,9 @@ const Cart = () => {
                         Place Order
                     </Text>
                 </TouchableOpacity>
-            </View>
-            <BottomNavigator  resetDrawer={resetDrawer}/>
+            </View>:<></>
+            }
+            <BottomNavigator resetDrawer={resetDrawer} />
         </>
     )
 }

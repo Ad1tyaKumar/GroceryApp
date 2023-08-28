@@ -8,7 +8,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import { clearErrors, getProduct } from '../../actions/productActions'
 import Icon from '@expo/vector-icons/MaterialIcons';
 import ProductCard from '../../components/Product/ProductCard';
-import Footer from '../../components/Footer/Footer';
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import { useRoute } from '@react-navigation/native';
 import CardSkeleton from '../../components/Product/CardSkeleton';
@@ -43,7 +42,7 @@ const categoryImg = [
 const Home = () => {
 
     const route = useRoute();
-    const { scrollY, setScrollY } = useSearch();
+    const { setScrollY } = useSearch();
 
     //Redux things
     const dispatch = useDispatch();
@@ -58,7 +57,6 @@ const Home = () => {
     )
     useFocusEffect(
         React.useCallback(() => {
-            console.log(scrollY);
             console.log('h');
             dispatch(getProduct());
         }, [dispatch])

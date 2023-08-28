@@ -80,7 +80,7 @@ export const getItems = () => async (dispatch, getState) => {
       }
     );
     const shippingInfo = await AsyncStorage.getItem('shippingInfo');
-    dispatch({ type: INIT_ITEMS, payload: { cart: data1.cart, shipping: shippingInfo ? shippingInfo : {} } })
+    dispatch({ type: INIT_ITEMS, payload: { cart: data1.cart, shipping: shippingInfo!=='{}' ? JSON.parse(shippingInfo) :{}  } })
     await AsyncStorage.setItem("cartItems", JSON.stringify(data1.cart))
 
   } catch (error) {
@@ -115,6 +115,7 @@ export const saveShippingInfo = (data) => async (dispatch, getState) => {
       type: SAVE_SHIPPING_INFO,
       payload: data,
     });
+
     const token = await AsyncStorage.getItem('token');
     await axios.post(
       `${backEndUrl}/api/v1/address/save`,
@@ -127,4 +128,5 @@ export const saveShippingInfo = (data) => async (dispatch, getState) => {
   } catch (error) {
     console.error("Error saving shipping info:", error);
   }
+
 };

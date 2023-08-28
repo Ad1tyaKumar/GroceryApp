@@ -2,10 +2,7 @@ import express from "express";
 import {
   addToCart,
   checkUser,
-  deleteUser,
   getAllCart,
-  getAllUsers,
-  getOneUser,
   getPin,
   getUser,
   login,
@@ -13,10 +10,9 @@ import {
   register,
   savePin,
   saveShippingInfo,
-  updateUser,
   updateUserInfo,
 } from "../controller/userController.js";
-import { authorizeRoles, isAuthenticated } from "../middlewares/auth.js";
+import { isAuthenticated } from "../middlewares/auth.js";
 const userRouter = express.Router();
 
 userRouter.route("/checkUser").post(checkUser);
@@ -29,12 +25,4 @@ userRouter.route('/user/pincode').post(getPin)
 userRouter.route("/cart").post(isAuthenticated, addToCart);
 userRouter.route("/cart/all").post(isAuthenticated, getAllCart);
 userRouter.route("/address/save").post(saveShippingInfo);
-userRouter
-  .route("/admin/users")
-  .post(isAuthenticated, authorizeRoles("admin"), getAllUsers);
-userRouter
-  .route("/admin/user/:id")
-  .post(isAuthenticated, authorizeRoles("admin"), getOneUser)
-  .put(isAuthenticated, authorizeRoles("admin"), updateUser)
-  .delete(isAuthenticated, authorizeRoles("admin"), deleteUser);
 export default userRouter;
