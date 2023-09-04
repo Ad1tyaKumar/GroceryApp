@@ -1,3 +1,3 @@
-const backEndUrl= `http://10.0.1.84:4000`
+const backEndUrl= `https://groceryapp-8a1p.onrender.com`
 
 export default backEndUrl
