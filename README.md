@@ -71,6 +71,8 @@ Now Open a new terminal
 Navigate to client folder and add backEndURL(on which server is running) in the host.js
 file.
 
+npm install
+
 npx expo install
 
 npm start
