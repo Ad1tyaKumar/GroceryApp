@@ -48,12 +48,12 @@ const Home = () => {
     const dispatch = useDispatch();
     const { loading, products, error } = useSelector((state) => state.products);
     const navigation = useNavigation();
-    const [resetDrawer,setResetDrawer]=useState(false);
+    const [resetDrawer, setResetDrawer] = useState(false);
     useFocusEffect(
-        React.useCallback(()=>{
+        React.useCallback(() => {
             setResetDrawer(true);
             setScrollY(false);
-        },[])
+        }, [])
     )
     useFocusEffect(
         React.useCallback(() => {
@@ -90,7 +90,6 @@ const Home = () => {
             <View
                 style={{
                     backgroundColor: 'white',
-                    height: Dimensions.get('window').height - 50
                 }}>
                 {/* <Header /> */}
 
@@ -98,12 +97,20 @@ const Home = () => {
                     style={{
                         backgroundColor: 'white',
                         position: 'relative',
-                        height: Dimensions.get('screen').height / 1.3,
+                        // height: Dimensions.get('screen').height / 1.3,
                     }}
                     onScroll={(event) => {
                         const { contentOffset } = event.nativeEvent;
-                        setScrollY(prevPositionY <= contentOffset.y);
+                        if (Math.abs(prevPositionY - contentOffset.y) < 10) {
+                            setPrevPositionY(contentOffset.y);
+                            return;
+                        }
+                        setScrollY(prevPositionY < contentOffset.y);
                         setResetDrawer(false);
+                        if (contentOffset.y === 0) {
+                            setResetDrawer(true);
+                            setScrollY(false);
+                        }
                         setPrevPositionY(contentOffset.y);
                     }}
                 >
