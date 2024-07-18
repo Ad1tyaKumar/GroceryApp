@@ -1,3 +1,3 @@
-const backEndUrl= `https://groceryapp-8a1p.onrender.com`
+const backEndUrl= `https://grocery-app-iota.vercel.app`
 
 export default backEndUrl
