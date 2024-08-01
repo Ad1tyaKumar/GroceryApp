@@ -15,9 +15,10 @@ import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import CardSkeleton from '../../components/Product/CardSkeleton';
 import ProductDetailsSkeleton from './ProductDetailsSkeleton';
 import { useSearch } from '../../components/SearchContext';
-import { addItemsToCart } from '../../actions/cartActions';
+import { addItemsToCart, reomveItemsFromCart } from '../../actions/cartActions';
 import Toast from 'react-native-root-toast';
 import { NEW_REVIEW_RESET } from '../../constants/productConstants';
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom';
 
 const ProductDetails = () => {
 
@@ -27,17 +28,6 @@ const ProductDetails = () => {
     const scrollX = useRef(new Animated.Value(0)).current;
     const [index, setIndex] = useState(0)
     const dispatch = useDispatch();
-    const [prevPositionY, setPrevPositionY] = useState(0);
-    const [resetDrawer, setResetDrawer] = useState(false);
-    const { scrollY, setScrollY } = useSearch();
-    useFocusEffect(
-        React.useCallback(() => {
-            setResetDrawer(true);
-            setScrollY(false);
-        }, [])
-    )
-
-    const isCarousel = useRef(null);
     const route = useRoute();
     const id = route.params.id;
     const { product, loading, error } = useSelector(
@@ -47,17 +37,35 @@ const ProductDetails = () => {
     const { success, error: reviewError } = useSelector(
         (state) => state.newReview
     );
+    const { cartItems, loading: cartLoading } = useSelector((state) => state.cart);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
         if (product && product.subCategory) {
             dispatch(getRelatedProducts(product.subCategory));
         }
     }, [dispatch, product])
     const [quantity, setQuantity] = useState(1);
-    const changeQuantity = (q) => {
-        if (q <= 0) return;
-        else if (q > product.Stock) return;
-        setQuantity(q);
-    }
+
+    const decreaseQuantity = (id, q) => {
+        if (1 >= q) {
+            deletCartItems(id);
+        } else {
+            dispatch(addItemsToCart(id, q - 1));
+        }
+    };
+    const increaseQuantity = (id, q, stock) => {
+        if (stock <= q) {
+            Toast.show('Cannot Add more Items!', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
+            return;
+        }
+        dispatch(addItemsToCart(id, q + 1));
+    };
+
+    const deletCartItems = () => {
+        dispatch(reomveItemsFromCart(product._id));
+    };
     const handleOnScroll = event => {
         Animated.event([
             {
@@ -125,21 +133,19 @@ const ProductDetails = () => {
             <View
                 style={{
                     backgroundColor: 'white',
-                    height: Dimensions.get('window').height - 50
                 }}>
                 {
-                    (loading || loading1) ? <ProductDetailsSkeleton /> :
-                        <ScrollView
-                            onScroll={(event) => {
-                                const { contentOffset } = event.nativeEvent;
-                                setScrollY(prevPositionY <= contentOffset.y);
-                                setPrevPositionY(contentOffset.y);
-                                setResetDrawer(false);
-                            }}
-                            contentContainerStyle={{ alignItems: 'center' }}
-                            style={{
-                                height: Dimensions.get('screen').height / 1.3,
-                            }}
+                    (loading || loading1 || cartLoading) ? <ProductDetailsSkeleton /> :
+                        <Animated.ScrollView
+                            onScroll={Animated.event(
+                                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                                { useNativeDriver: true }
+                            )}
+                            onMomentumScrollBegin={onMomentumScrollBegin}
+                            onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                            onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                            scrollEventThrottle={1}
+                            contentContainerStyle={{ alignItems: 'center', marginTop: 90, paddingBottom: 90 }}
                         >
 
                             <View
@@ -262,43 +268,53 @@ const ProductDetails = () => {
                                         marginTop: 20,
                                         marginBottom: 20
                                     }}>
-                                    <TouchableOpacity
-                                        activeOpacity={0.4}
-                                        style={styles.quantityButton}
-                                        onPress={() => changeQuantity(quantity - 1)}>
+                                    {
+                                        cartItems.find((item) => item.product === product._id) && cartItems.find((item) => item.product === product._id).quantity ?
+                                            <>
+                                                <TouchableOpacity
+                                                    activeOpacity={0.4}
+                                                    style={styles.quantityButton}
+                                                    onPress={() => decreaseQuantity(product._id, cartItems.find((item) => item.product === product._id).quantity)}>
 
-                                        <Icon1 name='minus' color={'black'} size={20} />
+                                                    <Icon1 name='minus' color={'black'} size={20} />
 
-                                    </TouchableOpacity>
-                                    <Text
-                                        style={{
-                                            fontSize: 18,
-                                            marginLeft: 8,
-                                            marginRight: 8
-                                        }}>
-                                        {quantity}
-                                    </Text>
-                                    <TouchableOpacity
-                                        activeOpacity={0.4}
-                                        style={styles.quantityButton}
-                                        onPress={() => changeQuantity(quantity + 1)}>
-                                        <Icon1 name='plus' color={'black'} size={20} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            dispatch(addItemsToCart(id, quantity))
-                                            Toast.show("Added to Cart", { duration: Toast.durations.SHORT })
-                                        }}
-                                        style={styles.addToCartButton}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Text
-                                            style={{
-                                                color: 'white'
-                                            }}>
-                                            Add To Cart
-                                        </Text>
-                                    </TouchableOpacity>
+                                                </TouchableOpacity>
+                                                <Text
+                                                    style={{
+                                                        fontSize: 18,
+                                                        marginLeft: 8,
+                                                        marginRight: 8
+                                                    }}>
+                                                    {cartItems.find((item) => item.product === product._id) && cartItems.find((item) => item.product === product._id).quantity}
+                                                </Text>
+                                                <TouchableOpacity
+                                                    activeOpacity={0.4}
+                                                    style={styles.quantityButton}
+                                                    onPress={() => increaseQuantity(
+                                                        product._id,
+                                                        cartItems.find((item) => item.product === product._id).quantity,
+                                                        product.Stock
+                                                    )}>
+                                                    <Icon1 name='plus' color={'black'} size={20} />
+                                                </TouchableOpacity>
+                                            </> : <TouchableOpacity
+                                                onPress={() => {
+                                                    dispatch(addItemsToCart(id, quantity))
+                                                    Toast.show("Added to Cart", { duration: Toast.durations.SHORT })
+                                                }}
+                                                style={[styles.addToCartButton, { marginLeft: cartItems.find((item) => item.product === product._id) && cartItems.find((item) => item.product === product._id).quantity ? 20 : 0 }]}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: 'white'
+                                                    }}>
+                                                    Add To Cart
+                                                </Text>
+                                            </TouchableOpacity>
+                                    }
+
+
                                 </View>
                                 <Divider />
                                 <View
@@ -566,10 +582,10 @@ const ProductDetails = () => {
                                     </View>
                                 </View>
                             </Modal>
-                        </ScrollView>
+                        </Animated.ScrollView>
                 }
+                <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
             </View>
-            <BottomNavigator resetDrawer={resetDrawer} />
         </>
     )
 }

@@ -8,7 +8,13 @@ import {
 
 let initialState = {
   cartItems: [],
-  shippingInfo: {},
+  shippingInfo: {
+    address: "",
+    city: "",
+    state: "",
+    pinCode: 0,
+    phoneNo: 0
+  },
 };
 
 // const loadInitialState = async () => {
@@ -64,6 +70,18 @@ export const cartReducer = createReducer(initialState, {
       ...state,
       cartItems: action.payload.cart,
       shippingInfo: action.payload.shipping,
+    }
+  },
+  CLEAR_DATA: (state, action) => {
+    return {
+      cartItems: [],
+      shippingInfo: {}
+    }
+  },
+  CLEAR_CART: (state, action) => {
+    return {
+      cartItems: [],
+      shippingInfo : action.payload.shipping
     }
   }
 });

@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, ScrollView, StyleSheet, FlatList, TouchableOpacity, Dimensions, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { addItemsToCart, getItems, reomveItemsFromCart } from '../../actions/cartActions';
 import Toast from 'react-native-root-toast';
@@ -8,15 +8,23 @@ import { Image } from 'expo-image';
 import BottomNavigator from '../../components/Bottom/BottomNavigator'
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSearch } from '../../components/SearchContext';
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom';
+
+
+const BOTTOM_HEIGHT = 50;
+var _clampedScrollValue = 0;
+var _offsetValue = 0;
+var _scrollValue = 0;
 
 const Cart = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const { scrollY, setScrollY } = useSearch();
-    const [prevPositionY, setPrevPositionY] = useState(0);
 
     const { isAuthenticated } = useSelector((state) => state.user);
     const { cartItems, loading } = useSelector((state) => state.cart);
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
+
     useEffect(() => {
         if (isAuthenticated) {
             dispatch(getItems());
@@ -31,13 +39,6 @@ const Cart = () => {
             dispatch(addItemsToCart(id, q - 1));
         }
     };
-    const [resetDrawer, setResetDrawer] = useState(false);
-    useFocusEffect(
-        React.useCallback(() => {
-            setResetDrawer(true);
-            setScrollY(false);
-        }, [])
-    )
     const increaseQuantity = (id, q, stock) => {
         if (stock <= q) {
             Toast.show('Cannot Add more Items!', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
@@ -50,25 +51,51 @@ const Cart = () => {
         dispatch(reomveItemsFromCart(id));
     };
 
+    const clampedScroll1 = Animated.diffClamp(
+        Animated.add(
+            scrollY.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 1],
+                extrapolateLeft: 'clamp',
+            }),
+            offsetAnim,
+        ),
+        0,
+        BOTTOM_HEIGHT
+    )
+
+    const bottomTabTranslate = clampedScroll1.interpolate({
+        inputRange: [0, BOTTOM_HEIGHT],
+        outputRange: [0, BOTTOM_HEIGHT],
+        extrapolate: 'clamp',
+    })
+
     return (
         <>
-            <ScrollView
-                onScroll={(event) => {
-                    const { contentOffset } = event.nativeEvent;
-                    setScrollY(prevPositionY <= contentOffset.y);
-                    setPrevPositionY(contentOffset.y);
-                    setResetDrawer(false);
-                }}
+            <Animated.ScrollView
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+                onMomentumScrollBegin={onMomentumScrollBegin}
+                onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                scrollEventThrottle={1}
                 style={{
                     width: '100%',
                     height: Dimensions.get('window').height
-                }}>
+                }}
+                contentContainerStyle={{
+                    marginTop : 90,
+                    paddingBottom : 90
+                }}
+                >
                 {
 
 
                     loading ? <Text>LOADING...</Text> :
 
-                    cartItems && cartItems.length ?
+                        cartItems && cartItems.length ?
                             <View style={styles.cartDiv}>
                                 <Text
                                     style={{
@@ -275,60 +302,65 @@ const Cart = () => {
                                 height: 500,
                             }}>
                                 <Text style={{
-                                    fontSize:20,
+                                    fontSize: 20,
                                 }}>
                                     NOTHING IN YOU CART :()
                                 </Text>
                             </View>
                 }
-            </ScrollView>
-            {
-                cartItems && cartItems.length?
-            <View
-                style={{
-                    position: 'absolute',
-                    bottom: resetDrawer ? 50 : !scrollY ? 0 : 50,
-                    height: 50,
-                    backgroundColor: 'grey',
-                    width: '100%',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    justifyContent: "space-around"
-                }}>
-                <Text
-                    style={{
-                        fontWeight: '500',
-                        color: 'white'
-                    }}>
-                    MRP TOTAL: {` ₹${cartItems.reduce(
-                        (total, curr) => total + curr.price * curr.quantity,
-                        0
-                    )}`}
-                </Text>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('order')}
-                    activeOpacity={0.6}
-                    style={{
-                        height: 35,
-                        width: 100,
-                        borderRadius: 15,
-                        elevation: 4,
+            </Animated.ScrollView>
+            <Animated.View
+                style={{ transform: [{ translateY: bottomTabTranslate }] }}
+            >
+                {
+                    cartItems && cartItems.length ?
+                        <View
+                            style={{
+                                position: 'absolute',
+                                // bottom: resetDrawer ? 50 : !scrollY ? 0 : 50,
+                                height: 50,
+                                bottom: 60,
+                                backgroundColor: 'grey',
+                                width: '100%',
+                                alignItems: 'center',
+                                flexDirection: 'row',
+                                justifyContent: "space-around"
+                            }}>
+                            <Text
+                                style={{
+                                    fontWeight: '500',
+                                    color: 'white'
+                                }}>
+                                MRP TOTAL: {` ₹${cartItems.reduce(
+                                    (total, curr) => total + curr.price * curr.quantity,
+                                    0
+                                )}`}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('order')}
+                                activeOpacity={0.6}
+                                style={{
+                                    height: 35,
+                                    width: 100,
+                                    borderRadius: 15,
+                                    elevation: 4,
 
-                        backgroundColor: '#26a541',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                    }}>
-                    <Text
-                        style={{
-                            color: 'white',
-                            fontWeight: '500'
-                        }}>
-                        Place Order
-                    </Text>
-                </TouchableOpacity>
-            </View>:<></>
-            }
-            <BottomNavigator resetDrawer={resetDrawer} />
+                                    backgroundColor: '#26a541',
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
+                                }}>
+                                <Text
+                                    style={{
+                                        color: 'white',
+                                        fontWeight: '500'
+                                    }}>
+                                    Place Order
+                                </Text>
+                            </TouchableOpacity>
+                        </View> : <></>
+                }
+            </Animated.View>
+            <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
         </>
     )
 }

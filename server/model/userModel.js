@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import validator from "validator";
+
+export const SocialMethods = Object.freeze({
+  GOOGLE: "google",
+  FACEBOOK: "fb",
+  TWITTER: "twitter",
+  INSTA: "insta",
+  GITHUB: "github",
+  APPLE: "apple"
+})
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -10,18 +20,24 @@ const userSchema = new mongoose.Schema({
   },
   phoneNo: {
     type: Number,
-    required: [true, "Please enter your Phone Number"],
-    unique: true,
   },
   email: {
     type: String,
-    unique: true,
     sparse: true,
     validate: [validator.isEmail, "Please enter a valid email"],
+  },
+  profileImg: {
+    type: String
   },
   role: {
     type: String,
     default: "user",
+  },
+  socialId: {
+    type: String,
+  },
+  socialMethod: {
+    type: String
   },
   cart: [
     {

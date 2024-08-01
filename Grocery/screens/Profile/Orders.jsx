@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Dimensions } from 'react-native'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Header from '../../components/Header/Header'
 import BottomNavigator from '../../components/Bottom/BottomNavigator'
 import { useDispatch, useSelector } from 'react-redux'
@@ -10,6 +10,8 @@ import Icon from '@expo/vector-icons/MaterialIcons';
 import { getItems } from '../../actions/cartActions'
 import { useSearch } from '../../components/SearchContext'
 import { useState } from 'react'
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom'
+import { Animated } from 'react-native'
 
 
 const Orders = () => {
@@ -23,6 +25,9 @@ const Orders = () => {
     let orders = useSelector((state) => state.order.orders);
     const { loading: ordersLoading } = useSelector((state) => state.order);
 
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
+
     useFocusEffect(
         React.useCallback(() => {
             if (isAuthenticated) {
@@ -35,32 +40,30 @@ const Orders = () => {
             dispatch(saveOrder());
         }, [dispatch])
     )
-    const { scrollY, setScrollY } = useSearch();
-    useFocusEffect(
-        React.useCallback(() => {
-            setResetDrawer(true);
-            setScrollY(false);
-        }, [])
-    )
-    const [resetDrawer, setResetDrawer] = useState(false);
 
-    const [prevPositionY, setPrevPositionY] = useState(0);
 
     return (
         <>
             {
                 (loading || ordersLoading) ? <ActivityIndicator size={50} /> :
-                    <ScrollView
-                        onScroll={(event) => {
-                            const { contentOffset } = event.nativeEvent;
-                            setScrollY(prevPositionY <= contentOffset.y);
-                            setPrevPositionY(contentOffset.y);
-                            setResetDrawer(false);
-                        }}
+                    <Animated.ScrollView
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: true }
+                        )}
+                        onMomentumScrollBegin={onMomentumScrollBegin}
+                        onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                        onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                        scrollEventThrottle={1}
                         showsVerticalScrollIndicator={false}
                         style={{
                             margin: 10,
-                        }}>
+                        }}
+                        contentContainerStyle={{
+                            marginTop: 90,
+                            paddingBottom: 90
+                        }}
+                    >
                         <Text
                             style={{
                                 fontWeight: '500',
@@ -154,9 +157,9 @@ const Orders = () => {
                                     ))
                             }
                         </View>
-                    </ScrollView >
+                    </Animated.ScrollView >
             }
-            <BottomNavigator  resetDrawer={resetDrawer}/>
+            <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
         </>
     )
 }

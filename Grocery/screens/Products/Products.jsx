@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Modal, Pressable, TouchableWithoutFeedback } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Modal, Pressable, TouchableWithoutFeedback, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { useFocusEffect, useRoute } from '@react-navigation/native'
 import Header from '../../components/Header/Header';
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
@@ -10,6 +10,7 @@ import ProductCard from '../../components/Product/ProductCard';
 import FilterBoxModal from './FilterBoxModal';
 import CardSkeleton from '../../components/Product/CardSkeleton';
 import { useSearch } from '../../components/SearchContext';
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom';
 
 const Products = () => {
 
@@ -18,18 +19,14 @@ const Products = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [filterMethodNo, setFilterMethodNo] = useState(0);
     const [filterCount, setFilterCount] = useState(0);
-    const route = useRoute();
-
-    const keyword = route.params.keyword;
-    const [resetDrawer, setResetDrawer] = useState(false);
     const { products, loading, error, getBrands } = useSelector((state) => state.products)
+    const route = useRoute();
+    const keyword = route.params.keyword;
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
 
-    useFocusEffect(
-        React.useCallback(() => {
-            setResetDrawer(true);
-            setScrollY(false);
-        }, [])
-    )
+
+
 
     useEffect(() => {
         console.log(keyword);
@@ -37,15 +34,6 @@ const Products = () => {
             getProduct(keyword, currentPage, [0, 20000], "", "")
         );
     }, [dispatch, keyword, currentPage])
-
-    // useFocusEffect(
-    //     React.useCallback(() => {
-    //         console.log(keyword);
-    //         dispatch(
-    //             getProduct(keyword, currentPage, [0, 20000], "", "")
-    //         );
-    //     }, [dispatch, keyword, currentPage])
-    // );
 
     const getProductsByPrice = (brand, p, ratings = 0) => {
         dispatch(
@@ -58,35 +46,37 @@ const Products = () => {
         getProductsByPrice([], [0, 20000], 0);
         setTriggered(false);
     }
-    const [prevPositionY, setPrevPositionY] = useState(0);
-    const { scrollY, setScrollY } = useSearch();
-
 
     return (
-        <>
+        <View style={{ flex: 1, backgroundColor: 'white' }}>
 
-            <View
-                style={{
-                    backgroundColor: 'white',
-                    height: Dimensions.get('window').height - 50
+
+            <Animated.ScrollView
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+                onMomentumScrollBegin={onMomentumScrollBegin}
+                onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                scrollEventThrottle={1}
+                contentContainerStyle={{
+                    // alignItems: 'flex-end'
                 }}>
-
-                <ScrollView
-                    onScroll={(event) => {
-                        const { contentOffset } = event.nativeEvent;
-                        setScrollY(prevPositionY <= contentOffset.y);
-                        setResetDrawer(false);
-                        setPrevPositionY(contentOffset.y);
-                    }}
-                    contentContainerStyle={{
-                        alignItems: 'flex-end'
+                <View
+                    style={{
+                        backgroundColor: 'white',
+                        // height: Dimensions.get('window').height - 50,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginTop: 110
                     }}>
                     <View
                         style={{
                             flexDirection: 'row',
                             // borderWidth:1,
-                            width: 245,
-                            margin: 20,
+                            width: '100%',
+                            // margin: 20,
                             marginBottom: 8,
                             alignItems: 'center',
                             justifyContent: 'space-around'
@@ -95,7 +85,8 @@ const Products = () => {
                         <Text
                             style={{
                                 fontSize: 20,
-                                color: 'grey'
+                                color: 'grey',
+                                textDecorationLine: 'underline'
                             }}>Products</Text>
 
                         <TouchableOpacity
@@ -146,9 +137,9 @@ const Products = () => {
 
                         <View
                             style={{
-                                borderBlockColor: 'black',
-                                borderBottomWidth: StyleSheet.hairlineWidth,
-                                width: '25%',
+                                // borderBlockColor: 'black',
+                                // borderBottomWidth: StyleSheet.hairlineWidth,
+                                // width: '25%',
                                 marginBottom: 20
                             }}>
                         </View>
@@ -181,8 +172,8 @@ const Products = () => {
                                 </View>
                         }
                     </View>
-                </ScrollView>
-            </View>
+                </View>
+            </Animated.ScrollView>
             <FilterBoxModal getBrands={getBrands}
                 getProductsByPrice={getProductsByPrice}
                 modalVisible={modalVisible}
@@ -192,8 +183,8 @@ const Products = () => {
                 setFilterCount={setFilterCount}
                 clearFilter={clearFilter}
             />
-            <BottomNavigator resetDrawer={resetDrawer} />
-        </>
+            <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
+        </View>
     )
 }
 

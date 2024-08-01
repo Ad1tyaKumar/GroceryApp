@@ -1,16 +1,10 @@
-import { View, Text, Modal, ActivityIndicator, StyleSheet, TextInput, TouchableOpacity } from 'react-native'
-import React from 'react'
-import Icon1 from '@expo/vector-icons/MaterialCommunityIcons'
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import { clearErrors, getUser, updateProfile } from '../../actions/userActions';
-import { auth } from "../../firebase.config";
-import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import Icon1 from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-root-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearErrors, getUser, updateProfile } from '../../actions/userActions';
 import { UPDATE_USER_RESET } from '../../constants/userConstants';
-import { useRef } from 'react';
 
 const isValidEmail = (email) => {
     // Regular expression to check for a basic email format
@@ -63,6 +57,7 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                 return;
             }
         }
+        setLoading1(true);
         let myForm = email === "" ? {
             name,
             phoneNo,
@@ -73,52 +68,53 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                 phoneNo,
             };
         dispatch(updateProfile(myForm));
+        setLoading1(false);
         setProfileModal(false);
     }
     const [loading1, setLoading1] = useState(false);
 
     const [verificationId, setVerificationId] = useState(null);
 
-    const onSignUp = async () => {
-        try {
-            setLoading1(true);
-            const phoneProvider = new PhoneAuthProvider(auth);
-            const verification = await phoneProvider.verifyPhoneNumber(
-                `+91${phoneNo}`,
-                recaptchaVerifier.current
-            );
-            setVerificationId(verification);
-            setLoading1(false);
-            setOtpSent(true);
-            Toast.show('OTP Sent Successfully!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
-        } catch (error) {
-            Toast.show('There was an error sending OTP.', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
-            setLoading1(false);
-        }
-    };
+    // const onSignUp = async () => {
+    //     try {
+    //         setLoading1(true);
+    //         const phoneProvider = new PhoneAuthProvider(auth);
+    //         const verification = await phoneProvider.verifyPhoneNumber(
+    //             `+91${phoneNo}`,
+    //             recaptchaVerifier.current
+    //         );
+    //         setVerificationId(verification);
+    //         setLoading1(false);
+    //         setOtpSent(true);
+    //         Toast.show('OTP Sent Successfully!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
+    //     } catch (error) {
+    //         Toast.show('There was an error sending OTP.', { duration: Toast.durations.SHORT, backgroundColor: 'red', shadowColor: 'black', position: -100 })
+    //         setLoading1(false);
+    //     }
+    // };
 
-    const confirmCode = async (code) => {
-        setLoading1(true);
-        try {
-            const credential = PhoneAuthProvider.credential(
-                verificationId,
-                Number(code)
-            );
+    // const confirmCode = async (code) => {
+    //     setLoading1(true);
+    //     try {
+    //         const credential = PhoneAuthProvider.credential(
+    //             verificationId,
+    //             Number(code)
+    //         );
 
-            const userCredential = await signInWithCredential(auth, credential);
+    //         const userCredential = await signInWithCredential(auth, credential);
 
-            Toast.show('OTP Verified!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
-            setLoading1(false);
-            updateProfileSubmit();
-            setOtpSent(false);
+    //         Toast.show('OTP Verified!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
+    //         setLoading1(false);
+    //         updateProfileSubmit();
+    //         setOtpSent(false);
 
-        } catch (error) {
-            console.log(error);
-            setLoading1(false);
-            Toast.show('Incorrect OTP!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
-            // Handle error, maybe show an error message to the user
-        }
-    };
+    //     } catch (error) {
+    //         console.log(error);
+    //         setLoading1(false);
+    //         Toast.show('Incorrect OTP!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
+    //         // Handle error, maybe show an error message to the user
+    //     }
+    // };
 
 
     return (
@@ -173,7 +169,7 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                                 </View>
                                 <View style={styles.shippingInfoInput}>
                                     <Icon1 name='email' size={25} />
-                                    <TextInput value={email} onChangeText={setEmail} placeholder='Email' style={{
+                                    <TextInput editable={false} value={email} onChangeText={setEmail} placeholder='Email' style={{
                                         padding: 10,
                                         marginLeft: 10,
                                         width: '85%'
@@ -188,7 +184,7 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                                         width: '85%'
                                     }} />
                                 </View>
-                                {
+                                {/* {
                                     otpSent ?
                                         <View style={styles.shippingInfoInput}>
                                             <Icon1 name='phone' size={25} />
@@ -202,7 +198,7 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                                 <FirebaseRecaptchaVerifierModal
                                     ref={recaptchaVerifier}
                                     firebaseConfig={auth.config}
-                                />
+                                /> */}
                                 <View style={{
                                     flexDirection: 'row',
                                     justifyContent: 'space-around',
@@ -212,60 +208,42 @@ const EditProfileModal = ({ profileModal, setProfileModal }) => {
                                         style={{
                                             marginTop: 20,
                                             padding: 5,
-                                            backgroundColor: '#26a541'
+                                            backgroundColor: '#26a541',
+                                            height : 30
                                         }}
                                         onPress={() => setProfileModal(false)}>
 
                                         <Text style={{
                                             fontSize: 16,
-                                            color: 'white'
+                                            color: 'white',
+                                            flex : 1
                                         }}>
-                                            CLOSE
+                                            Close
                                         </Text>
                                     </TouchableOpacity>
-                                    {
-                                        otpSent ? <TouchableOpacity
-                                            onPress={() => confirmCode(code)}
-                                            style={{
-                                                marginTop: 20,
-                                                padding: 5,
-                                                backgroundColor: '#26a541',
-                                                width:65,
-                                            }}>
-                                            {loading1 ?
-                                                    <ActivityIndicator color={'white'} /> :
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 16,
-                                                            color: 'white'
-                                                        }}>
-                                                        Confirm
 
-                                                    </Text>
-                                                }
-                                        </TouchableOpacity> :
-                                            <TouchableOpacity
-                                                activeOpacity={0.7}
-                                                onPress={() => onSignUp()}
+                                    <TouchableOpacity
+                                        onPress={() => updateProfileSubmit()}
+                                        style={{
+                                            marginTop: 20,
+                                            padding: 5,
+                                            backgroundColor: '#26a541',
+                                            // width: 65,
+                                        }}>
+                                        {loading1 ?
+                                            <ActivityIndicator color={'white'} /> :
+                                            <Text
                                                 style={{
-                                                    marginTop: 20,
-                                                    padding: 5,
-                                                    width:65,
-                                                    backgroundColor: '#26a541'
+                                                    fontSize: 16,
+                                                    color: 'white',
+                                                    flex : 1
                                                 }}>
-                                                {loading1 ?
-                                                    <ActivityIndicator color={'white'} /> :
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 16,
-                                                            color: 'white'
-                                                        }}>
-                                                        Get Otp
+                                                Confirm
 
-                                                    </Text>
-                                                }
-                                            </TouchableOpacity>
-                                    }
+                                            </Text>
+                                        }
+                                    </TouchableOpacity>
+
                                 </View>
                             </View>
                         </View>

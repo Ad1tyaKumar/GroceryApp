@@ -5,7 +5,7 @@ import SkeletonComponent from '../../components/Skeleton/SkeletonComponent'
 const ProductDetailsSkeleton = () => {
     return (
         <View
-            style={{ alignItems: 'center' }}>
+            style={{ alignItems: 'center', marginTop : 90, paddingBottom : 110 }}>
             <View
                 style={{
                     marginTop: 40,

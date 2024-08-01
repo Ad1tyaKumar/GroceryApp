@@ -50,10 +50,20 @@ export const register = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const login = catchAsyncErrors(async (req, res, next) => {
-  const { phoneNo } = req.body;
-  const user = await User.findOne({ phoneNo });
-
+  const { socialId, name, email, profileImg, method } = req.body;
+  let user = await User.findOne({ socialId });
+  if (!user) {
+    user = await User.create({
+      socialId,
+      name,
+      email,
+      profileImg,
+      socialMethod: method
+    });
+    await user.save();
+  }
   sendToken(user, 200, res);
+
 });
 
 //logout user
@@ -129,7 +139,7 @@ export const savePin = catchAsyncErrors((req, res, next) => {
   const pin = jwt.sign({ pin: pinCode }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
-  
+
   res.status(200).json({
     success: true,
     pinCode,

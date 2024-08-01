@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity, Animated } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import BottomNavigator from '../../components/Bottom/BottomNavigator'
 import ProfileImg from '../../images/Profile.png'
 import { Image } from 'expo-image'
@@ -7,51 +7,72 @@ import { useDispatch, useSelector } from 'react-redux'
 import AddressModal from './AddressModal'
 import { deleteAddress, getUser } from '../../actions/userActions'
 import EditProfileModal from './EditProfileModal'
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useSearch } from '../../components/SearchContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import HeaderAndBottom from '../../components/Animated/HeaderAndBottom'
 
 const Profile = () => {
 
     const { user, loading, isAuthenticated } = useSelector((state) => state.user);
-    const [resetDrawer,setResetDrawer]=useState(false);
-    const { scrollY, setScrollY } = useSearch();
     const [addressModal, setAddressModal] = useState(false);
-    const { shippingInfo } = useSelector((state) => state.cart);
+    const navigation = useNavigation();
+    // const { shippingInfo } = useSelector((state) => state.cart);
     const dispatch = useDispatch();
-    const [address, setAddress] = useState(shippingInfo.address);
-    const [city, setCity] = useState(shippingInfo.city);
-    const [state, setState] = useState(shippingInfo.state);
-    const [pinCode, setPinCode] = useState(shippingInfo.pinCode);
-    const [phoneNo, setPhoneNo] = useState(shippingInfo.phoneNo);
+    const [address, setAddress] = useState("");
+    const [city, setCity] = useState("");
+    const [state, setState] = useState("");
+    const [pinCode, setPinCode] = useState();
+    const [phoneNo, setPhoneNo] = useState();
     const [profileModal, setProfileModal] = useState(false);
-    useFocusEffect(
-        React.useCallback(()=>{
-            setResetDrawer(true);
-            setScrollY(false);
-        },[])
-    )
+    const [shippingInfoLoading, setShippingInfoLoading] = useState(true);
+    const [shippingInfo, setShippingInfo] = useState();
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        if (isAuthenticated && user.shippingAddress) {
-            console.log(user.shippingAddress.address);
-            setAddress(user.shippingAddress.address);
-            setCity(user.shippingAddress.city);
-            setState(user.shippingAddress.state);
-            setPinCode(user.shippingAddress.pinCode);
-            setPhoneNo(user.shippingAddress.phoneNo);
+        (
+            async () => {
+                if (isAuthenticated && user.shippingAddress) {
+                    setShippingInfo(user.shippingAddress);
+                    await AsyncStorage.setItem("shippingInfo", JSON.stringify(user.shippingAddress));
+                    // console.log(user.shippingAddress.address, 56);
+                    setAddress(user.shippingAddress.address);
+                    setCity(user.shippingAddress.city);
+                    setState(user.shippingAddress.state);
+                    setPinCode(user.shippingAddress.pinCode);
+                    setPhoneNo(user.shippingAddress.phoneNo);
 
-        }
+                } else if (isAuthenticated) {
+                    const data = await AsyncStorage.getItem("shippingInfo");
+                    const info = JSON.parse(data);
+                    setShippingInfo(info);
+                    if (info) {
+                        setAddress(info.address);
+                        setCity(info.city);
+                        setState(info.state);
+                        setPinCode(info.pinCode);
+                        setPhoneNo(info.phoneNo);
+                    }
+                } else {
+                    navigation.navigate('home');
+                }
+                setShippingInfoLoading(false);
+            }
+        )()
+
     }, [isAuthenticated]);
-    const removeAddress = () => {
+    const removeAddress = async () => {
+        await AsyncStorage.setItem("shippingInfo", JSON.stringify({}));
         dispatch(deleteAddress());
         dispatch(getUser());
     }
     return (
         <>
             {
-                loading ? <ActivityIndicator size={40} /> :
+                (!isAuthenticated || loading || shippingInfoLoading) ? <ActivityIndicator size={40} /> :
                     <View style={{
-                        marginTop: 10,
+                        marginTop: 90,
                         alignItems: 'center'
                     }}>
                         <Text style={{
@@ -76,8 +97,9 @@ const Profile = () => {
                         }}>
                             <Image style={{
                                 height: 150,
-                                width: 150
-                            }} source={ProfileImg} />
+                                width: 150,
+                                borderRadius: 150
+                            }} source={{ uri: user.profileImg }} />
                             <View>
                                 <Text style={styles.detailsText}>
                                     Full Name
@@ -115,7 +137,7 @@ const Profile = () => {
                             </Text>
                         </TouchableOpacity>
                         {
-                            JSON.stringify(shippingInfo) !== '{}' ?
+                            shippingInfo && JSON.stringify(shippingInfo) !== '{}' ?
                                 <View style={{
                                     marginTop: 20,
                                     borderWidth: 1,
@@ -170,7 +192,7 @@ const Profile = () => {
                                 </View>
                         }
                         {
-                            JSON.stringify(shippingInfo) !== '{}' ?
+                            shippingInfo && JSON.stringify(shippingInfo) !== '{}' ?
                                 <View style={{
                                     width: '100%',
                                     flexDirection: 'row',
@@ -218,7 +240,7 @@ const Profile = () => {
                         <EditProfileModal profileModal={profileModal} setProfileModal={setProfileModal} />
                     </View>
             }
-            <BottomNavigator resetDrawer={resetDrawer} />
+            <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
         </>
     )
 }

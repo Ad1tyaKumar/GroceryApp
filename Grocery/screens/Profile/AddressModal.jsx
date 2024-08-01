@@ -11,6 +11,7 @@ import { State } from 'country-state-city';
 import { saveShippingInfo } from '../../actions/cartActions';
 import Toast from 'react-native-root-toast';
 import { getUser } from '../../actions/userActions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddressModal = ({
     addressModal,
@@ -42,7 +43,7 @@ const AddressModal = ({
         }
     }, [isAuthenticated])
 
-    const shippingSubmit = () => {
+    const shippingSubmit = async() => {
         if (!phoneNo || phoneNo.toString().length !== 10) {
             Toast.show('Phone Number should be 10-digits.', { duration: Toast.durations.SHORT })
             return;
@@ -70,6 +71,14 @@ const AddressModal = ({
                 phoneNo: parseInt(phoneNo),
             })
         );
+        await AsyncStorage.setItem("shippingInfo", JSON.stringify({
+            address,
+            city,
+            state,
+            country: "India",
+            pinCode: parseInt(pinCode),
+            phoneNo: parseInt(phoneNo),
+        }));
         setAddressModal(false);
         dispatch(getUser());
     };

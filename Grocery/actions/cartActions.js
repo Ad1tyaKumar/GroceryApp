@@ -1,5 +1,6 @@
 import {
   ADD_TO_CART,
+  CLEAR_DATA,
   INIT_ITEMS,
   REMOVE_CART_ITEM,
   SAVE_SHIPPING_INFO,
@@ -28,6 +29,7 @@ export const addItemsToCart = (id, quantity) => async (dispatch, getState) => {
       },
     });
     const token = await AsyncStorage.getItem('token');
+    console.log(getState().cart.cartItems.length);
     await AsyncStorage.setItem(
       "cartItems",
       JSON.stringify(getState().cart.cartItems)
@@ -80,7 +82,7 @@ export const getItems = () => async (dispatch, getState) => {
       }
     );
     const shippingInfo = await AsyncStorage.getItem('shippingInfo');
-    dispatch({ type: INIT_ITEMS, payload: { cart: data1.cart, shipping: shippingInfo!=='{}' ? JSON.parse(shippingInfo) :{}  } })
+    dispatch({ type: INIT_ITEMS, payload: { cart: data1.cart, shipping: shippingInfo !== '{}' ? JSON.parse(shippingInfo) : {} } })
     await AsyncStorage.setItem("cartItems", JSON.stringify(data1.cart))
 
   } catch (error) {
@@ -94,6 +96,7 @@ export const reomveItemsFromCart = (id) => async (dispatch, getState) => {
       type: REMOVE_CART_ITEM,
       payload: id,
     });
+    console.log(getState().cart.cartItems.length);
     await AsyncStorage.setItem(
       "cartItems",
       JSON.stringify(getState().cart.cartItems)
@@ -130,3 +133,12 @@ export const saveShippingInfo = (data) => async (dispatch, getState) => {
   }
 
 };
+
+export const clearData = () => async (dispatch, getState) => {
+  await AsyncStorage.setItem("shippingInfo", JSON.stringify({}));
+  await AsyncStorage.setItem("cartItems", JSON.stringify([]));
+  console.log('g');
+  dispatch({
+    type: CLEAR_DATA
+  });
+}

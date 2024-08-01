@@ -1,62 +1,60 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native'
-import React, { useDebugValue, useEffect, useRef, useState } from 'react'
-import Toast from 'react-native-root-toast';
-import BottomNavigator from '../../components/Bottom/BottomNavigator'
-import Register from './Register/Register';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import Login from './Login/Login';
 import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, ScrollView, Text, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { checkUser, login, register } from '../../actions/userActions';
-import { PhoneAuthProvider } from "firebase/auth";
-import { auth } from "../../firebase.config";
-const SignIn = () => {
+import BottomNavigator from '../../components/Bottom/BottomNavigator';
+import {
+    GoogleSignin,
+    GoogleSigninButton,
+    statusCodes,
+} from '@react-native-google-signin/google-signin';
+import { login } from '../../actions/userActions';
+import HeaderAndBottom from '../../components/Animated/HeaderAndBottom';
 
+const SignIn = () => {
+    GoogleSignin.configure();
     const navigation = useNavigation();
     const dispatch = useDispatch();
-    const [phoneNo, setPhoneNo] = useState(0);
-    const [loading1, setLoading1] = useState(false);
-
-    const recaptchaVerifier = useRef(null);
-    const { loading, isUser, error, isAuthenticated } = useSelector(
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
+    const { isAuthenticated } = useSelector(
         (state) => state.user
     );
 
     useEffect(() => {
-        if(isAuthenticated){
-            navigation.navigate('profile');
+        if (isAuthenticated) {
+            navigation.navigate('home');
         }
     }, [isAuthenticated])
 
-    const onSignUp = async () => {
+    const signIn = async () => {
         try {
-            setLoading1(true);
-            const phoneProvider = new PhoneAuthProvider(auth);
-            const verificationId = await phoneProvider.verifyPhoneNumber(
-                `+91${phoneNo}`,
-                recaptchaVerifier.current
-            );
-            setLoading1(false);
-            Toast.show('OTP Sent Successfully!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
-            navigation.navigate('middleScreen', {
-                phoneNo, verificationId
-            })
+            await GoogleSignin.signOut();
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            dispatch(login(userInfo, "google"));
+            navigation.navigate("home");
+            // console.log(userInfo);
+            //   setState({ userInfo });
         } catch (error) {
             console.log(error);
-            setLoading1(false);
+            if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+                // user cancelled the login flow
+            } else if (error.code === statusCodes.IN_PROGRESS) {
+                // operation (e.g. sign in) is in progress already
+            } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                // play services not available or outdated
+            } else {
+                // some other error happened
+            }
         }
-
     };
 
     return (
-        <View
-            style={{
-                height: '100%'
-            }}>
-            <ScrollView>
-                <View
-                    style={{
-                        height: Dimensions.get('window').height - 80,
+        <>
+            <View style={{ height: '100%', marginTop : 90 }}>
+                <ScrollView
+                    contentContainerStyle={{
                         alignItems: 'center',
                     }}>
                     <Text
@@ -73,7 +71,8 @@ const SignIn = () => {
                             borderRadius: 40,
                             elevation: 5,
                             backgroundColor: '#fff',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            marginBottom: 5
                         }}>
                         <Text
                             style={{
@@ -90,68 +89,18 @@ const SignIn = () => {
                             }}>
                             To Access Your Address and orders
                         </Text>
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                borderBottomWidth: 1,
-                                borderColor: 'grey'
-                            }}>
-                            <Text>
-                                +91
-                            </Text>
-                            <TextInput
-                                onChangeText={setPhoneNo}
-                                style={{
-                                    marginLeft: 5
-                                }}
-                                keyboardType='number-pad'
-                                placeholder='Enter Your Phone number'
-                            />
-                        </View>
-                        <FirebaseRecaptchaVerifierModal
-                            ref={recaptchaVerifier}
-                            firebaseConfig={auth.config}
-                        />
-                        <TouchableOpacity
-                            disabled={phoneNo.toString().length !== 10 || loading1}
-                            onPress={() => {
-                                // console.log(loading, isUser);
-                                dispatch(checkUser(phoneNo));
+                        <GoogleSigninButton
 
-                                onSignUp();
-                                // Toast.show('OTP SENT!', { duration: Toast.durations.SHORT, backgroundColor: '#26a541', shadowColor: 'black', position: -100 })
-
-                            }}
-                            activeOpacity={0.6}
-                            style={{
-                                backgroundColor: '#4a7dff',
-                                padding: 5,
-                                borderRadius: 15,
-                                marginTop: 100,
-                                width: 80,
-                                alignItems: 'center',
-                                opacity: phoneNo.toString().length !== 10 ? 0.6 : 1
-                            }}>
-                            {
-                                !loading1 ?
-                                    <Text
-                                        style={{
-                                            color: 'white',
-                                            fontSize: 15,
-                                            fontWeight: '500'
-                                        }}>
-                                        Get Otp
-                                    </Text> : <ActivityIndicator color={'white'} />
-                            }
-                        </TouchableOpacity>
+                            size={GoogleSigninButton.Size.Wide}
+                            style={{ width: 250, marginTop: 20 }}
+                            color={GoogleSigninButton.Color.Dark}
+                            onPress={signIn} />
                     </View>
-                </View>
-            </ScrollView>
-
-            <BottomNavigator />
-        </View>
+                    {/* </View> */}
+                </ScrollView>
+            </View>
+            <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
+        </>
     )
 }
 

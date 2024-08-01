@@ -47,7 +47,7 @@ import {
 import axios from "axios";
 import backEndUrl from "../host";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { saveShippingInfo } from "./cartActions.js";
+import { saveShippingInfo, clearData } from "./cartActions.js";
 
 //sendOTP
 export const checkUser = (phoneNo) => async (dispatch) => {
@@ -65,7 +65,7 @@ export const checkUser = (phoneNo) => async (dispatch) => {
 };
 
 //login
-export const login = (phoneNo) => async (dispatch) => {
+export const login = (userInfo, method) => async (dispatch) => {
   try {
     dispatch({ type: LOGIN_REQUEST });
 
@@ -77,7 +77,13 @@ export const login = (phoneNo) => async (dispatch) => {
     };
     const { data } = await axios.post(
       `${backEndUrl}/api/v1/login`,
-      { phoneNo },
+      {
+        socialId: userInfo.user.id,
+        name: userInfo.user.name,
+        email: userInfo.user.email,
+        profileImg: userInfo.user.photo,
+        method
+      },
       config
     );
     if (data.success) {
@@ -125,6 +131,7 @@ export const logout = () => async (dispatch) => {
     });
     await AsyncStorage.setItem('token', '');
     dispatch({ type: LOGOUT_SUCCESS });
+    clearData();
   } catch (error) {
     dispatch({ type: LOGOUT_FAIL, payload: error.response.data.msg });
   }
@@ -161,7 +168,7 @@ export const updateProfile = (userData) => async (dispatch) => {
       `${backEndUrl}/api/v1/user`,
       { userData, token },
     );
-      console.log(data);
+    console.log(data);
     dispatch({ type: UPDATE_USER_SUCCESS, payload: data });
   } catch (error) {
     console.log(error);

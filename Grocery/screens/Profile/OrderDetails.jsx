@@ -1,44 +1,46 @@
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Pressable } from 'react-native'
-import React from 'react'
+import React, { useRef } from 'react'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import BottomNavigator from '../../components/Bottom/BottomNavigator';
 import { useSelector } from 'react-redux';
 import { Image } from 'expo-image';
 import { useSearch } from '../../components/SearchContext';
 import { useState } from 'react';
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom';
+import { Animated } from 'react-native';
 
 const OrderDetails = () => {
 
     const route = useRoute();
 
-    const { user, isAuthenticated, loading, error } = useSelector((state) => state.user);
-    const { scrollY, setScrollY } = useSearch();
-    useFocusEffect(
-        React.useCallback(()=>{
-            setResetDrawer(true);
-            setScrollY(false);
-        },[])
-    )
-    const [resetDrawer,setResetDrawer]=useState(false);
-
-    const [prevPositionY, setPrevPositionY] = useState(0);
-
+    const { user, loading } = useSelector((state) => state.user);
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const offsetAnim = useRef(new Animated.Value(0)).current;
     const order = route.params.order;
     const address = `${order.shippingInfo.address}, ${order.shippingInfo.city
         }, ${order.shippingInfo.state}, ${order.shippingInfo.pinCode
         }, ${`India`}`;
     const navigation = useNavigation();
+    console.log(order);
     return (
         <>
             {
                 loading ? <ActivityIndicator size={50} /> :
-                    <ScrollView
-                    onScroll={(event) => {
-                    const { contentOffset } = event.nativeEvent;
-                    setScrollY(prevPositionY <= contentOffset.y);
-                    setPrevPositionY(contentOffset.y);
-                    setResetDrawer(false);
-                }}>
+                    <Animated.ScrollView
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: true }
+                        )}
+                        onMomentumScrollBegin={onMomentumScrollBegin}
+                        onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                        onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                        scrollEventThrottle={1}
+                        contentContainerStyle ={{
+                            marginTop : 90,
+                            paddingBottom : 90
+                        }}
+                        
+                    >
                         <View
                             style={{
                                 margin: 10,
@@ -214,9 +216,9 @@ const OrderDetails = () => {
                                 </View>
                             </View>
                         </View>
-                    </ScrollView>
+                    </Animated.ScrollView>
             }
-            <BottomNavigator  resetDrawer={resetDrawer} />
+            <HeaderAndBottom offsetAnim={offsetAnim} scrollY={scrollY} />
         </>
     )
 }

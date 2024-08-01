@@ -24,44 +24,40 @@ const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 export class Main extends Component {
-
     render() {
+        StatusBar.setBackgroundColor('lightgreen')
         return (
+
             <SearchProvider>
                 <NavigationContainer>
                     <Drawer.Navigator
                         backBehavior='history'
-                        screenOptions={{
-                            drawerStyle: {
-                                marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-                            },
-                        }}
                         drawerContent={props => <DrawerContent {...props} />}
                     >
 
                         <Drawer.Screen name='home' component={Home} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='profile' component={Profile} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='products' component={Products} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='product-details' component={ProductDetails} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='orders' component={Orders} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='order-details' component={OrderDetails} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='cart' component={Cart} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='signin' component={SignIn} options={{
-                            header: () => <Header />
+                            header: () => <></>
                         }} />
                         <Drawer.Screen name='middleScreen' component={MiddleScreen} options={{
                             header: () => <Header />

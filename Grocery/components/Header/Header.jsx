@@ -1,15 +1,15 @@
 import { View, Button, Text, SafeAreaView, TouchableOpacity, Platform, StatusBar, StyleSheet, TextInput, ActivityIndicator, Modal, Pressable, TouchableWithoutFeedback, Animated } from 'react-native'
 import React, { useDebugValue, useEffect, useState } from 'react'
 import Icon from '@expo/vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/core';
+// import { useNavigation } from '@react-navigation/core';
 import { useSearch } from '../SearchContext';
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect , useNavigation} from '@react-navigation/native'
 import { useDispatch, useSelector } from 'react-redux';
 import { addPinCode, getPin, getUser } from '../../actions/userActions';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getItems } from '../../actions/cartActions';
-import Icon1 from '@expo/vector-icons/Feather'
 import { useRef } from 'react';
+import Model from './Model';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Header = () => {
     const { searchInput, setSearchInput, scrollY } = useSearch();
@@ -22,13 +22,23 @@ const Header = () => {
     const [invalid, setInvalid] = useState(false);
     const [pincode, setPinCode] = useState(0);
     const [modalVisible, setModalVisible] = useState(false);
+    // const [cartItems, setCartItems] = useState(null);
+    const [cartLoading, setCartLoading] = useState(false);
 
     const handleSearch = () => {
         setClicked(!clicked);
         navigation.navigate('products', { keyword: searchInput, clicked })
     }
-    const { loading1: loading1, cartItems } = useSelector((state) => state.cart)
+    const { loading: loading1, shippingInfo, cartItems } = useSelector((state) => state.cart)
     const { user, isAuthenticated } = useSelector((state) => state.user);
+
+    // useEffect(() => {
+    //     (async () => {
+    //         const cartString = await AsyncStorage.getItem("cartItems");
+    //         setCartItems(JSON.parse(cartString));
+    //         setCartLoading(false);
+    //     })()
+    // }, [loading1, cartItemsState])
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -38,14 +48,23 @@ const Header = () => {
 
     }, [dispatch, isAuthenticated]);
 
-
     useFocusEffect(
         React.useCallback(() => {
+            // console.log(isAuthenticated, user);
             if (isAuthenticated) {
+                // console.log(shippingInfo);
                 dispatch(getItems());
             }
         }, [dispatch, isAuthenticated])
     );
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setPinCode(pinCode);
+        }, [pinCode])
+    )
+
+
     const handlePinSubmit = (e) => {
         setInvalid(false);
         if (pincode.toString().length === 6) {
@@ -55,31 +74,17 @@ const Header = () => {
             setInvalid(true);
         }
     };
-    useFocusEffect(
-        React.useCallback(() => {
-            setPinCode(pinCode);
-        }, [pinCode])
-    )
-    const animation = useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-        Animated.spring(animation, {
-            toValue: scrollY ? 1 : 0,
-            useNativeDriver: true
-        }).start();
-    }, [scrollY])
-    const interpolatedHeight = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 0], // Define the height values here
-      });
-    
+
     return (
-        <View style={{
-            height:!scrollY?'auto':79,
-            backgroundColor:'lightgreen'
-        }}>
-            <SafeAreaView>
+        <SafeAreaView>
+            <View style={{
+                height : 'auto',
+                backgroundColor: 'lightgreen'
+            }}>
                 <View style={styles.nav} >
-                    <Icon name="menu" size={30} color="black" onPress={() => navigation.toggleDrawer()} />
+                    <Icon name="menu" size={30} color="black" onPress={() => {
+                        navigation.toggleDrawer()
+                    }} />
                     {/* <Text>K</Text> */}
                     <TouchableOpacity
                         onPress={() => navigation.navigate('home')}>
@@ -101,43 +106,46 @@ const Header = () => {
                             </Pressable>
                     }
                     <TouchableOpacity
+
                         activeOpacity={0.7}
-                        onPress={() => navigation.navigate('cart')}
+                        disabled={cartLoading}
+                        onPress={() => isAuthenticated ? navigation.navigate('cart') : navigation.navigate("signin")}
                         style={styles.cartIcon}>
 
                         <Icon name="shopping-cart" size={30} color="white" />
                         {/* <Text>H</Text> */}
                         {
-                            loading1 ?
+                            cartLoading ?
                                 <ActivityIndicator /> :
-                                <Text style={{
-                                    position: 'absolute',
-                                    right: -2,
-                                    top: -5,
-                                    backgroundColor: 'red',
-                                    color: 'white',
-                                    width: 20,
-                                    height: 20,
-                                    borderRadius: 16,
-                                    textAlign: 'center',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transform: [{ scale: 0.8 }],
-                                    fontSize: 16
-                                }}>
-                                    {cartItems && cartItems.length}
-                                </Text>
+                                isAuthenticated ?
+                                    <Text style={{
+                                        position: 'absolute',
+                                        right: -2,
+                                        top: -5,
+                                        backgroundColor: 'red',
+                                        color: 'white',
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: 16,
+                                        textAlign: 'center',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transform: [{ scale: 0.8 }],
+                                        fontSize: 16
+                                    }}>
+                                        {cartItems && cartItems.length}
+                                    </Text> : <></>
                         }
                     </TouchableOpacity>
                 </View>
-                <Animated.View
+                <View
                     style={{
                         flexDirection: 'row',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        height:40,
-                        width:'100%',
-                        transform: [{ scaleY: interpolatedHeight }]
+                        // height: 40,
+                        width: '100%',
+                        // transform: [{ scaleY: interpolatedHeight }]
                     }}>
                     <TextInput
                         onChangeText={setSearchInput}
@@ -145,7 +153,7 @@ const Header = () => {
                         onSubmitEditing={handleSearch}
                         placeholder='Search'
                         cursorColor={'black'} style={{
-                            height: 30,
+                            // height: 30,
                             fontSize: 15,
                             width: 250,
                             borderTopLeftRadius: 5,
@@ -153,8 +161,8 @@ const Header = () => {
                             borderRightWidth: 0,
                             paddingLeft: 5,
                             borderColor: 'grey',
-                            backgroundColor:'white',
-                            elevation:15,
+                            backgroundColor: 'white',
+                            elevation: 15,
                         }} />
                     <TouchableOpacity
                         onPress={handleSearch}
@@ -162,7 +170,7 @@ const Header = () => {
                         style={{
                             backgroundColor: '#26a541',
                             width: 25,
-                            height: 30,
+                            // height: 30,
                             alignItems: 'center',
                             justifyContent: 'center',
                             borderTopRightRadius: 5,
@@ -173,101 +181,11 @@ const Header = () => {
                         }}>
 
                         <Icon name='search' color={'white'} size={25} />
-
                     </TouchableOpacity>
-                </Animated.View>
-                <Modal
-                    animationType='fade'
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => setModalVisible(!modalVisible)}
-                >
-                    <Pressable
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-
-                        }}
-                        onPress={() => setModalVisible(!modalVisible)}
-                    >
-                        <View
-                            style={{
-                                backgroundColor: 'white',
-                                width: 250,
-                                height: 250,
-                                // position: 'absolute',
-                                // top: 40,
-                                // right: 50,
-                                elevation: 20,
-                                alignItems: 'center',
-                            }}>
-                            <TouchableOpacity
-                                onPress={() => setModalVisible(false)}
-                                style={{
-                                    position: 'absolute',
-                                    top: 10,
-                                    right: 10
-                                }}>
-                                <Icon size={20} name='close' />
-                            </TouchableOpacity>
-                            <Text
-                                style={{
-                                    marginTop: 50,
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '700'
-                                }}>
-                                Where do you want your Delivery?
-                            </Text>
-                            <Text
-                                style={{
-                                    marginTop: 20,
-                                    fontSize: 15
-                                }}>
-                                Enter Your Pincode:-
-                            </Text>
-                            <View
-                                style={{
-                                    width: '65%',
-                                    marginTop: 25,
-                                    height: 25,
-                                    flexDirection: 'row',
-                                }}>
-                                <TextInput
-                                    value={pincode.toString()}
-                                    onSubmitEditing={handlePinSubmit}
-                                    onChangeText={setPinCode}
-                                    style={{
-                                        width: '84%',
-                                        borderWidth: 1,
-                                        borderRightWidth: 0,
-                                        paddingLeft: 5,
-                                    }} keyboardType='number-pad' />
-                                <TouchableOpacity onPress={handlePinSubmit} style={{
-                                    justifyContent: 'center',
-                                    backgroundColor: '#26a541',
-                                    borderWidth: 1,
-                                    borderLeftWidth: 0,
-                                }}>
-                                    <Icon1 name='check' color={'white'} size={20} />
-                                </TouchableOpacity>
-                            </View>
-                            {
-                                invalid ?
-                                    <Text style={{
-                                        fontSize: 12,
-                                        color: 'red',
-                                        marginTop: 5,
-                                    }}>Enter A Valid PinCde</Text> : <></>
-                            }
-                        </View>
-
-                    </Pressable>
-                </Modal>
-            </SafeAreaView>
-        </View>
+                </View>
+                <Model pincode={pincode} setPinCode={setPinCode} invalid={invalid} modalVisible={modalVisible} setModalVisible={setModalVisible} handlePinSubmit={handlePinSubmit} />
+            </View>
+        </SafeAreaView>
     )
 }
 
@@ -279,14 +197,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         width: 'auto',
         backgroundColor: '#26a541',
-        marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
         alignItems: 'center',
-        height: 50
+        height: 60
     },
     deliverToDiv: {
         backgroundColor: 'white',
         borderRadius: 10,
-        width: 95,
         alignItems: 'left',
     },
     cartIcon: {

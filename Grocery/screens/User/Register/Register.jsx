@@ -1,12 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Dimensions } from 'react-native'
-import React, { Component, useEffect, useRef, useState } from 'react'
+import React, { Component, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // import OTPInput from "react-native-otp-input-fields";
-import OTPInput from '../OtpInput';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { useDispatch } from 'react-redux';
-import { auth } from '../../../firebase.config'
+import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-root-toast';
+import { useDispatch } from 'react-redux';
+import OTPInput from '../OtpInput';
 
 const isValidEmail = (email) => {
     // Regular expression to check for a basic email format

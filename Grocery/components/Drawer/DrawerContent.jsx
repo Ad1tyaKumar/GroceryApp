@@ -16,7 +16,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../actions/userActions';
 import Toast from 'react-native-root-toast';
-
+import {
+    GoogleSignin,
+} from '@react-native-google-signin/google-signin';
 
 
 const categories = [
@@ -92,6 +94,8 @@ const categories = [
 
 
 const DrawerContent = ({ navigation }) => {
+    GoogleSignin.configure();
+
     const categoryImages = [staples, dairy, snacks, beverages, homeCare, kitchen];
     const dispatch = useDispatch();
     const { isAuthenticated, user } = useSelector((state) => state.user)
@@ -251,30 +255,35 @@ const DrawerContent = ({ navigation }) => {
                             Home
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={()=>navigation.navigate('profile')}>
+                    <TouchableOpacity onPress={() => isAuthenticated ? navigation.navigate('profile') : navigation.navigate('signin')}>
                         <Text style={styles.myAccountAction}>
                             Profile
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity  onPress={()=>navigation.navigate('orders')}>
+                    <TouchableOpacity onPress={() => isAuthenticated ? navigation.navigate('orders') : navigation.navigate('signin')}>
                         <Text style={styles.myAccountAction}>
                             Orders
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity  onPress={()=>navigation.navigate('cart')}>
+                    <TouchableOpacity onPress={() => isAuthenticated ? navigation.navigate('cart') : navigation.navigate('signin')}>
                         <Text style={styles.myAccountAction}>
                             Cart
                         </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => {
-                            dispatch(logout())
-                            Toast.show('Logged Out Successfully!',{duration:Toast.durations.LONG})
-                        }}>
-                        <Text style={styles.myAccountAction}>
-                            Logout
-                        </Text>
-                    </TouchableOpacity>
+                    {
+                        isAuthenticated ?
+                            <TouchableOpacity
+                                onPress={async () => {
+                                    navigation.toggleDrawer();
+                                    navigation.navigate('home');
+                                    dispatch(logout())
+                                    Toast.show('Logged Out Successfully!', { duration: Toast.durations.LONG })
+                                }}>
+                                <Text style={styles.myAccountAction}>
+                                    Logout
+                                </Text>
+                            </TouchableOpacity> : <></>
+                    }
                 </View>
                 <View style={{
                     marginTop: 15,

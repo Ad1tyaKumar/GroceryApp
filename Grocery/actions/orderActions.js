@@ -13,6 +13,7 @@ import {
 } from "../constants/orderConstants";
 import { reomveItemsFromCart } from "./cartActions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CLEAR_CART } from "../constants/cartConstants";
 
 //Create Order
 export const createOrder = (order) => async (dispatch, getState) => {
@@ -24,9 +25,20 @@ export const createOrder = (order) => async (dispatch, getState) => {
       `${backEndUrl}/api/v1/orders/new`,
       { order, token },
     );
-    order.orderItems.forEach((element) => {
-      dispatch(reomveItemsFromCart(element.product));
+    await axios.post(
+      `${backEndUrl}/api/v1/cart`,
+      { cartItems: [], token },
+    );
+    dispatch({
+      type: CLEAR_CART, payload: {
+        shipping: order.shippingInfo
+      }
     });
+
+    await AsyncStorage.setItem('cartItems', JSON.stringify([]));
+    // order.orderItems.forEach((element) => {
+    //   dispatch(reomveItemsFromCart(element.product));
+    // });
     dispatch({ type: CREATE_ORDER_SUCCESS, payload: data.order });
   } catch (error) {
     console.log(error);
