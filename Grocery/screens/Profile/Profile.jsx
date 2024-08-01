@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity, Animated } from 'react-native'
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import BottomNavigator from '../../components/Bottom/BottomNavigator'
 import ProfileImg from '../../images/Profile.png'
@@ -10,7 +10,7 @@ import EditProfileModal from './EditProfileModal'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useSearch } from '../../components/SearchContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import HeaderAndBottom from '../../components/Animated/HeaderAndBottom'
+import HeaderAndBottom, { onMomentumScrollBegin, onMomentumScrollEnd, onScrollEndDrag } from '../../components/Animated/HeaderAndBottom'
 
 const Profile = () => {
 
@@ -71,10 +71,21 @@ const Profile = () => {
         <>
             {
                 (!isAuthenticated || loading || shippingInfoLoading) ? <ActivityIndicator size={40} /> :
-                    <View style={{
-                        marginTop: 90,
-                        alignItems: 'center'
-                    }}>
+                    <Animated.ScrollView
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: true }
+                        )}
+                        onMomentumScrollBegin={onMomentumScrollBegin}
+                        onMomentumScrollEnd={() => onMomentumScrollEnd(offsetAnim)}
+                        onScrollEndDrag={() => onScrollEndDrag(offsetAnim)}
+                        scrollEventThrottle={1}
+                        contentContainerStyle={{
+                            marginTop: 90,
+                            alignItems: 'center',
+                            paddingBottom: 90,
+                            height: Dimensions.get('screen').height
+                        }}>
                         <Text style={{
                             textAlign: 'center',
                             fontSize: 25,
@@ -90,10 +101,11 @@ const Profile = () => {
                             marginTop: 10,
                         }} />
                         <View style={{
-                            flexDirection: 'row',
+                            // flexDirection: 'row',
                             justifyContent: 'space-around',
                             alignItems: 'center',
                             width: '100%',
+                            marginTop : 10
                         }}>
                             <Image style={{
                                 height: 150,
@@ -238,7 +250,7 @@ const Profile = () => {
                             setPhoneNo={setPhoneNo}
                         />
                         <EditProfileModal profileModal={profileModal} setProfileModal={setProfileModal} />
-                    </View>
+                    </Animated.ScrollView>
             }
             <HeaderAndBottom scrollY={scrollY} offsetAnim={offsetAnim} />
         </>
